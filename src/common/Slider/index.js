@@ -3,7 +3,7 @@ import { ImageBackground, StyleSheet, View } from "react-native";
 import Carousel, { Pagination } from "react-native-snap-carousel";
 import { BANNER_1 } from "../../helper/image";
 import { Screen } from "../../theme/dimens";
-import { AppText, INTER_SEMI_BOLD, TWENTY, WHITE } from "../AppText";
+import { AppText, INTER_SEMI_BOLD, TWENTY, TWENTY_TWO, WHITE } from "../AppText";
 // import Typography from "../../Common/Typography";
 // import Font from "../../Common/Font";
 
@@ -43,7 +43,7 @@ const Slider = () => {
           resizeMode="cover"
         ></ImageBackground>
         <View style={{marginTop: 1, alignItems:"center"}}>
-        <AppText color={WHITE} type={TWENTY} weight={INTER_SEMI_BOLD}>{item?.title}</AppText>
+        <AppText color={WHITE} type={TWENTY_TWO} weight={INTER_SEMI_BOLD}>{item?.title}</AppText>
         </View>
       </View>
     );
@@ -75,8 +75,8 @@ const Slider = () => {
         activeDotIndex={activeIndex}
         containerStyle={styles.paginationContainer}
         dotStyle={[styles.dot, {backgroundColor: "#FFFFFF"}]}
-        inactiveDotOpacity={0.3}
-        inactiveDotScale={0.9}
+        inactiveDotOpacity={0.5}
+        inactiveDotScale={1}
         inactiveDotStyle={styles.inactiveDot}
       />
     </View>
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: -20,
     left: 160,
-    width: 57,
+    width: 56,
     // backgroundColor: "red"
   },
   dot: {

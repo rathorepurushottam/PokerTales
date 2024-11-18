@@ -4,6 +4,7 @@ import styles from "./styles";
 import { AppText, SIXTEEN, INTER_BOLD } from "../AppText";
 import { TouchableOpacityView } from "../TouchableOpacityView";
 import { colors } from "../../theme/color";
+import { Pressable, TouchableOpacity } from "react-native";
 
 const PrimaryButton = ({
   title,
@@ -17,21 +18,23 @@ const PrimaryButton = ({
   ...rest
 }) => {
   return (
-    <TouchableOpacityView
-      activeOpacity={0.1}
+    <Pressable
+      // activeOpacity={0.1}
+      android_ripple={{foreground: true, color: colors.lightGreen}}
       disabled={disabled}
       {...rest}
       style={buttonStyle}
       onPress={onPress}
+      
     >
       <LinearGradient
         colors={
           !disabled
-            ? [colors.playerDetailsLinerOne, colors.playerDetailsLinerTwo]
+            ? [colors.playerDetailsLinerTwo, colors.playerDetailsLinerOne]
             : ["#00000033", "#00000033"]
         }
-        start={{ x: 0.1, y: 0.1 }}
-        end={{ x: 0, y: 0 }}
+        start={{ x: 0, y: 2}}
+        end={{ x: 0, y: 0}}
         style={[styles.linearGradient, smallBtn]}
       >
         <AppText
@@ -42,7 +45,7 @@ const PrimaryButton = ({
           {title}
         </AppText>
       </LinearGradient>
-    </TouchableOpacityView>
+    </Pressable>
   );
 };
 

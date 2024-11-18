@@ -1,4 +1,5 @@
-import { StyleSheet, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 import PrimaryButton from "./PrimaryButton";
 import {
   AppText,
@@ -12,13 +13,67 @@ import {
 } from "./AppText";
 import InputBox from "./InputBox";
 import { colors } from "../theme/color";
-import { useState } from "react";
 import OTPInputView from "@twotalltotems/react-native-otp-input";
 import FastImage from "react-native-fast-image";
 import { timerIcon } from "../helper/image";
+import { useDispatch } from "react-redux";
+import { otpVerification, userSignup } from "../actions/authActions";
 
-const LoginOTP = ({ onResetPassword }) => {
-  const [code, setCode] = useState("");
+const LoginOTP = ({ otp, setOtp, phoneNumber, referCode, onCloseOtp, isForgot, onResetPassword }) => {
+  const dispatch = useDispatch();
+  const [resendButtonDisabledTime, setResendButtonDisabledTime] = useState(
+    RESEND_OTP_TIME_LIMIT
+  );
+  const autoSubmitOtpTimerIntervalCallbackReference = useRef();
+  const RESEND_OTP_TIME_LIMIT = 60; // 30 secs
+
+  let resendOtpTimerInterval;
+  // const [code, setCode] = useState("");
+
+  useEffect(() => {
+    autoSubmitOtpTimerIntervalCallbackReference.current =
+      autoSubmitOtpTimerIntervalCallback;
+  }, []);
+
+  useEffect(() => {
+    startResendOtpTimer();
+
+    return () => {
+      if (resendOtpTimerInterval) {
+        clearInterval(resendOtpTimerInterval);
+      }
+    };
+  }, [resendButtonDisabledTime]);
+
+  const startResendOtpTimer = () => {
+    if (resendOtpTimerInterval) {
+      clearInterval(resendOtpTimerInterval);
+    }
+    resendOtpTimerInterval = setInterval(() => {
+      if (resendButtonDisabledTime <= 0) {
+        clearInterval(resendOtpTimerInterval);
+      } else {
+        setResendButtonDisabledTime(resendButtonDisabledTime - 1);
+      }
+    }, 1000);
+  };
+
+  const autoSubmitOtpTimerIntervalCallback = () => {};
+
+  const handleResendOTP = () => {
+    setResendButtonDisabledTime(RESEND_OTP_TIME_LIMIT);
+    startResendOtpTimer();
+    let number = parseInt(phoneNumber);
+    let data = {
+      signId: number,
+      type: isForgot ? "changePassword" : "loginOtp",
+    };
+    dispatch(userSignup(data));
+  };
+
+  // const handleOtp = () => {
+    
+  // }
   return (
     <View styles={styles.mainView}>
       <View
@@ -41,20 +96,14 @@ const LoginOTP = ({ onResetPassword }) => {
         Verification
       </AppText>
       <View style={styles.menuView}>
-        <AppText
-          type={FORTEEN}
-          color={BLUE}
-          weight={INTER_MEDIUM}
-        >
-          OTP has sent to 98******00
+        <AppText type={FORTEEN} color={BLUE} weight={INTER_MEDIUM}>
+          OTP has sent to {phoneNumber}
         </AppText>
-        <AppText
-          type={FORTEEN}
-          color={BLUE}
-          weight={INTER_MEDIUM}
-        >
-          Change
-        </AppText>
+        <TouchableOpacity onPress={onCloseOtp}>
+          <AppText type={FORTEEN} color={BLUE} weight={INTER_MEDIUM}>
+            Change
+          </AppText>
+        </TouchableOpacity>
       </View>
       <OTPInputView
         style={{
@@ -64,48 +113,69 @@ const LoginOTP = ({ onResetPassword }) => {
           height: 50,
         }}
         pinCount={6}
-        code={code}
+        code={otp}
         autoFocusOnLoad={false}
         editable={true}
         keyboardType="number-pad"
         placeholderCharacter="-"
-        onCodeChanged={(value) => setCode(value)}
+        onCodeChanged={(value) => setOtp(value)}
         onCodeFilled={(code) => {
-          if (code.length == 6) {
-            onResetPassword();
-            //   if (id == 'register') {
-            //     let _data = {
-            //       refercode: Number.refercode,
-            //       mobile_number: Number.mobile_number,
-            //       otp: code,
-            //     };
-            //     dispatch(otpVerification(_data));
-            //   }
+          if (code.length === 6) {
+            let number = parseInt(phoneNumber);
+            if(isForgot) {
+              onResetPassword();
+              setOtp(otp);
+            } else {
+              let otp = parseInt(code);
+              let _data = {
+                signId: number,
+                otp: otp,
+                refCode: referCode,
+              };
+              dispatch(otpVerification(_data , onCloseOtp));
+            }
           }
         }}
         placeholderTextColor={colors.black}
         codeInputFieldStyle={styles.underlineStyleBase}
         codeInputHighlightStyle={styles.underlineStyleHighLighted}
       />
-      <View style={[styles.menuView, {marginTop: 10}]}>
-        <View style={{flexDirection: "row", alignItems: "center", padding: 1}}>
-            <FastImage source={timerIcon} resizeMode="contain" tintColor={colors.black} style={{width: 15, height: 15, marginRight: 3}}/>
-        <AppText
-          type={FORTEEN}
-          color={BOTTOMTEXT}
-          weight={INTER_SEMI_BOLD}
+      <View style={[styles.menuView, { marginTop: 10 }]}>
+        <View
+          style={{ flexDirection: "row", alignItems: "center", padding: 1 }}
         >
-          00:00
-        </AppText>
+          <FastImage
+            source={timerIcon}
+            resizeMode="contain"
+            tintColor={colors.black}
+            style={{ width: 15, height: 15, marginRight: 3 }}
+          />
+          {resendButtonDisabledTime > 0 ? (
+            <AppText
+              //  onPress={onResend}
+
+              type={FORTEEN}
+              color={BOTTOMTEXT}
+              weight={INTER_SEMI_BOLD}
+            >
+              Resend OTP in{" "}
+              {resendButtonDisabledTime > 0
+                ? "0:" + resendButtonDisabledTime
+                : "00:00"}
+            </AppText>
+          ) : (
+            <TouchableOpacity onPress={handleResendOTP}>
+              <AppText
+                //  onPress={onResend}
+                type={FORTEEN}
+                color={BOTTOMTEXT}
+                weight={INTER_SEMI_BOLD}
+              >
+                Resend OTP
+              </AppText>
+            </TouchableOpacity>
+          )}
         </View>
-     
-        <AppText
-          type={FORTEEN}
-          color={DISABLETEXT}
-          weight={INTER_MEDIUM}
-        >
-          Resend OTP
-        </AppText>
       </View>
     </View>
   );
@@ -131,6 +201,6 @@ const styles = StyleSheet.create({
   },
   menuView: {
     flexDirection: "row",
-    justifyContent: "space-between"
+    justifyContent: "space-between",
   },
 });

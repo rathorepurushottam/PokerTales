@@ -22,10 +22,51 @@ import Checkbox from "./CheckBox";
 import PrimaryButton from "./PrimaryButton";
 import { useRef, useState } from "react";
 import ForgotPassword from "./ForgotPassword";
+import { toastAlert, validateEmail, validatePassword, validatePhoneNumber } from "../helper/utility";
+import { useDispatch } from "react-redux";
+import { loginUsingPassword } from "../actions/authActions";
 
 
-const LoginWithPassword = ({ setIsRememberSelected, isRememberSelected, onOpenForgot }) => {
-  const [showPass, setShowPass] = useState(false);
+const LoginWithPassword = ({ setIsRememberSelected, isRememberSelected, onOpenForgot, onCloseLogin }) => {
+  const dispatch = useDispatch();
+  const [showPass, setShowPass] = useState(true);
+  const [signId, setSignId] = useState("");
+  const [password, setPassword] = useState("");
+  const [signFocus, setSignFocus] = useState(false);
+  const [passFocus, setPassFocus] = useState(false);
+
+
+  const handleLoginUsingPassword = () => {
+    if (!signId) {
+      toastAlert.showToastError("Please enter Email or Mobile Number");
+      return;
+    }
+    if(signId.includes('@')) {
+      if(!validateEmail(signId)) {
+        toastAlert.showToastError('Please Enter Correct Mobile Number');
+          return;
+      };
+    } else if (!validatePhoneNumber(signId)) {
+      toastAlert.showToastError('Please Enter Correct Mobile Number');
+      return;
+    }
+  
+    if (!password) {
+      toastAlert.showToastError("Please enter password");
+      return;
+    };
+    if (!validatePassword(password)) {
+      toastAlert.showToastError("Invalid password format.");
+      return;
+    }
+    let number =  signId.includes('@') ? signId : parseInt(signId);
+    let data = {
+      password: password,
+      signId: number
+    }
+
+    dispatch(loginUsingPassword(data ,onCloseLogin));
+  };
 
   
   return (
@@ -55,11 +96,15 @@ const LoginWithPassword = ({ setIsRememberSelected, isRememberSelected, onOpenFo
         placeholderTextColor={"#00000066"}
         textInputStyle={{
           borderWidth: 1,
-          borderColor: "#E4E4E4",
+          borderColor: signFocus ? "#1251AE" : "#E4E4E4",
           borderRadius: 12,
           backgroundColor: "#F5F5F5",
           height: 55,
         }}
+        onFocus={() => setSignFocus(true)}
+        onBlur={() => setSignFocus(false)}
+        onChange={(value) => setSignId(value)}
+        value={signId}
       />
       <InputBox
         placeholder={"Password"}
@@ -67,12 +112,16 @@ const LoginWithPassword = ({ setIsRememberSelected, isRememberSelected, onOpenFo
         placeholderTextColor={"#00000066"}
         textInputStyle={{
           borderWidth: 1,
-          borderColor: "#E4E4E4",
+          borderColor: passFocus ? "#1251AE" : "#E4E4E4",
           borderRadius: 12,
           backgroundColor: "#F5F5F5",
           marginTop: 25,
           height: 55,
         }}
+        onFocus={() => setPassFocus(true)}
+        onBlur={() => setPassFocus(false)}
+       value={password}
+       onChange={(value) => setPassword(value)}
         isPassword={true}
         secureTextEntry={showPass}
         onToggle={() => setShowPass(!showPass)}
@@ -89,7 +138,7 @@ const LoginWithPassword = ({ setIsRememberSelected, isRememberSelected, onOpenFo
             innerStyle={{ backgroundColor: colors.darkBlue }}
             login
           />
-          <AppText type={FORTEEN} color={BOTTOMTEXT} weight={INTER_MEDIUM}>
+          <AppText type={FORTEEN} color={BOTTOMTEXT} weight={INTER_MEDIUM} style={{ marginLeft: 10 }}>
             Remember me
           </AppText>
         </TouchableOpacityView>
@@ -102,8 +151,9 @@ const LoginWithPassword = ({ setIsRememberSelected, isRememberSelected, onOpenFo
       <PrimaryButton
         title={"Login"}
         weight={INTER_MEDIUM}
-        disabled
+        disabled={(!signId || !password)}
         buttonStyle={{ marginTop: 40 }}
+        onPress={handleLoginUsingPassword}
       />
      
     </View>

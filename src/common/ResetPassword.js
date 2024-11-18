@@ -22,10 +22,47 @@ import Checkbox from "./CheckBox";
 import PrimaryButton from "./PrimaryButton";
 import { useRef, useState } from "react";
 import ForgotPassword from "./ForgotPassword";
+import { toastAlert, validatePassword } from "../helper/utility";
+import { useDispatch } from "react-redux";
+import { forgotPassword } from "../actions/authActions";
 
 
-const ResetPassword = ({ setIsRememberSelected, isRememberSelected, onOpenForgot }) => {
-  const [showPass, setShowPass] = useState(false);
+const ResetPassword = ({ onCloseResetPass, signId, otp, setIsForgot }) => {
+  const dispatch = useDispatch();
+  const [showPass, setShowPass] = useState(true);
+  const [showConfPass, setShowConfPass] = useState(true);
+  const [newPassFocus, setNewPassFocus] = useState(false);
+  const [conPassFocus, setConPassFocus] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPass, setConfirmPass] = useState('');
+
+
+  const handleResetPassword = () => {
+    if (!newPassword) {
+      toastAlert.showToastError("Please enter New Password");
+      return;
+    };
+    if (!confirmPass) {
+      toastAlert.showToastError("Please enter Confirm Password");
+      return;
+    };
+    if (!validatePassword(newPassword)) {
+      toastAlert.showToastError("Your password must be at least 8 characters long, contain at least one number and have a mixture of uppercase and lowercase letters.");
+      return;
+    };
+    if (confirmPass !== newPassword) {
+      toastAlert.showToastError("New Password and Confirm Password does not Match!");
+      return;
+    };
+    setIsForgot(false);
+    let data = {
+      otp: parseInt(otp),
+      newPassword: newPassword,
+      confirmPassword: confirmPass,
+      signId: signId,
+    };
+    dispatch(forgotPassword(data, onCloseResetPass))
+  }
 
   
   return (
@@ -55,11 +92,15 @@ const ResetPassword = ({ setIsRememberSelected, isRememberSelected, onOpenForgot
         placeholderTextColor={"#00000066"}
         textInputStyle={{
           borderWidth: 1,
-          borderColor: "#E4E4E4",
+          borderColor: newPassFocus ? "#1251AE" : "#E4E4E4",
           borderRadius: 12,
           backgroundColor: "#F5F5F5",
           height: 55,
         }}
+        value={newPassword}
+        onChange={(value) => setNewPassword(value)}
+        onBlur={() => setNewPassFocus(false)}
+        onFocus={() => setNewPassFocus(true)}
         isPassword={true}
         secureTextEntry={showPass}
         onToggle={() => setShowPass(!showPass)}
@@ -75,11 +116,11 @@ const ResetPassword = ({ setIsRememberSelected, isRememberSelected, onOpenForgot
         >
           <Checkbox
             value={true}
-            style={{ borderColor: colors.black, marginRight: 10, borderRadius: 20 }}
+            style={{ borderColor: colors.black, borderRadius: 20 }}
             innerStyle={{ backgroundColor: colors.darkBlue, borderRadius: 20 }}
             login
           />
-          <AppText type={FORTEEN} color={BLACK} weight={INTER_MEDIUM}>
+          <AppText type={FORTEEN} color={BLACK} weight={INTER_MEDIUM} style={{marginLeft: 10}}>
           8-20 Characters Long
           </AppText>
         </TouchableOpacityView>
@@ -91,22 +132,27 @@ const ResetPassword = ({ setIsRememberSelected, isRememberSelected, onOpenForgot
         placeholderTextColor={"#00000066"}
         textInputStyle={{
           borderWidth: 1,
-          borderColor: "#E4E4E4",
+          borderColor: conPassFocus ? "#1251AE" : "#E4E4E4",
           borderRadius: 12,
           backgroundColor: "#F5F5F5",
           marginTop: 15,
           height: 55,
         }}
+        value={confirmPass}
+        onChange={(value) => setConfirmPass(value)}
+        onBlur={() => setConPassFocus(false)}
+        onFocus={() => setConPassFocus(true)}
         isPassword={true}
-        secureTextEntry={showPass}
-        onToggle={() => setShowPass(!showPass)}
+        secureTextEntry={showConfPass}
+        onToggle={() => setShowConfPass(!showConfPass)}
       />
       
       <PrimaryButton
         title={"Submit"}
         weight={INTER_MEDIUM}
-        disabled
-        buttonStyle={{ marginTop: 60 }}
+        disabled={!newPassword || !confirmPass}
+        onPress={handleResetPassword}
+        buttonStyle={{ marginTop: 50 }}
       />
      
     </View>
@@ -122,7 +168,7 @@ const styles = StyleSheet.create({
   referView: {
     // flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 40,
+    marginTop: 30,
   },
   checkbox: {
     flexDirection: "row",

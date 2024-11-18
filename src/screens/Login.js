@@ -1,5 +1,7 @@
+import { useRef, useState } from "react";
 import { ImageBackground, StyleSheet, View } from "react-native";
 import RBSheet from "react-native-raw-bottom-sheet";
+import { useDispatch } from "react-redux";
 
 import { AppSafeAreaView } from "../common/AppSafeAreaView";
 import { backgroundImage, whatsupAppIcon } from "../helper/image";
@@ -22,7 +24,7 @@ import { universalPaddingHorizontal } from "../theme/dimens";
 import InputBox from "../common/InputBox";
 import PrimaryButton from "../common/PrimaryButton";
 import { TouchableOpacityView } from "../common/TouchableOpacityView";
-import { useRef, useState } from "react";
+
 import Checkbox from "../common/CheckBox";
 import FastImage from "react-native-fast-image";
 import { KeyBoardAware } from "../common/KeyBoardAware";
@@ -31,9 +33,11 @@ import ReferCode from "../common/ReferCode";
 import ForgotPassword from "../common/ForgotPassword";
 import LoginOTP from "../common/LoginOTP";
 import ResetPassword from "../common/ResetPassword";
-import { toastAlert } from "../helper/utility";
+import { toastAlert, validatePhoneNumber } from "../helper/utility";
+import { userSignup } from "../actions/authActions";
 
 const Login = () => {
+  const dispatch = useDispatch();
   const refRBSheetLogin = useRef();
   const refRBSheetRefer = useRef();
   const refRBSheetForgot = useRef();
@@ -41,28 +45,82 @@ const Login = () => {
   const refRBSheetPassword = useRef();
   const [isAgeSelected, setIsAgeSelected] = useState(false);
   const [isPromonSelected, setIsPromoSelected] = useState(false);
-  const [isRememberSelected, setIsRememberSelected] = useState(false);
+  const [isRememberSelected, setIsRememberSelected] = useState(true);
+  // const [isLogin, setIsLogin] = useState(false);
+  const [isForgot, setIsForgot] = useState(false);
+  const [phoneFocus, setPhoneFocus] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [otp, setOtp] = useState("");
+  const [referCode, setReferCode] = useState("");
 
   const handleOpenForgot = () => {
     refRBSheetLogin?.current?.close();
     refRBSheetForgot?.current?.open();
+    setIsForgot(true);
+    setOtp('');
   };
 
   const handleCloseForgot = () => {
     refRBSheetForgot?.current?.close();
     refRBSheetOTP?.current?.open();
+    // setIsLogin(true);
   };
 
   const handleResetPassword = () => {
     refRBSheetOTP?.current?.close();
-    refRBSheetPassword?.current?.open();
+    if (isForgot) {
+      refRBSheetPassword?.current?.open();
+    }
+
   };
 
   const handleOTP = () => {
-    if(!isAgeSelected) {
-        toastAlert.showToastError("Please click on terms and condtions");
-        return;
-    };
+    if (!phoneNumber) {
+      toastAlert.showToastError("Please enter Mobile Number");
+      return;
+    }
+    if (!validatePhoneNumber(phoneNumber)) {
+      toastAlert.showToastError("Please Enter Correct Mobile Number");
+      return;
+    }
+    if (!isAgeSelected) {
+      toastAlert.showToastError("Please click on terms and condtions");
+      return;
+      
+    } 
+    if (!isPromonSelected) {
+      toastAlert.showToastError("Please click on Promtional SMS.");
+      return;
+    } else {
+      let number = parseInt(phoneNumber);
+      let data = {
+        signId: number,
+        type: "loginOtp",
+      };
+
+      dispatch(userSignup(data));
+    }
+
+    // setIsLogin(false);
+    refRBSheetOTP.current.open();
+    setOtp('');
+  };
+
+  const handleCloseRefer = () => {
+    refRBSheetRefer.current.close();
+  };
+
+  const handleCloseLogin = () => {
+    refRBSheetLogin.current.close();
+  };
+
+  const handleCloseResetPass = () => {
+    refRBSheetPassword.current.close();
+  };
+
+  const handleCloseOtp = () => {
+    console.log("close");
+    refRBSheetOTP.current.close();
   }
 
   return (
@@ -82,14 +140,34 @@ const Login = () => {
             >
               Login or Register
             </AppText>
-            <InputBox placeholder={"Enter mobile number"} top phone textInputStyle={{color: "white"}}/>
+            <InputBox
+              placeholder={"Enter mobile number"}
+              top
+              phone
+              textInputStyle={{ color: "white", fontSize: 16 }}
+              onFocus={() => setPhoneFocus(true)}
+              onBlur={() => setPhoneFocus(false)}
+              containerStyle={{
+                borderWidth: phoneFocus ? 1 : 0,
+                borderColor: phoneFocus && "#FFFFFF26",
+              }}
+              value={phoneNumber}
+              onChange={setPhoneNumber}
+            />
             <View style={styles.referView}>
-            <TouchableOpacityView
-                onPress={() => refRBSheetRefer.current.open()}
+              <TouchableOpacityView
+                onPress={() => {
+                  setReferCode('');
+                  refRBSheetRefer.current.open();
+                }}
               >
-              <AppText type={FORTEEN} color={LIGHTBLUE} weight={INTER_REGULAR}>
-                Referral Code?
-              </AppText>
+                <AppText
+                  type={FORTEEN}
+                  color={LIGHTBLUE}
+                  weight={INTER_REGULAR}
+                >
+                  Referral Code?
+                </AppText>
               </TouchableOpacityView>
               <TouchableOpacityView
                 onPress={() => refRBSheetLogin.current.open()}
@@ -107,7 +185,11 @@ const Login = () => {
                 </AppText>
               </TouchableOpacityView>
             </View>
-            <PrimaryButton title={"Get OTP"} weight={INTER_MEDIUM} onPress={handleOTP}/>
+            <PrimaryButton
+              title={"Get OTP"}
+              weight={INTER_MEDIUM}
+              onPress={handleOTP}
+            />
             <TouchableOpacityView
               onPress={() => setIsAgeSelected(!isAgeSelected)}
               style={styles.checkbox}
@@ -119,10 +201,10 @@ const Login = () => {
               <AppText
                 type={TWELVE}
                 color={TEXTGREY}
-                weight={INTER_LIGHT}
-                style={{ marginLeft: 10 }}
+                weight={INTER_REGULAR}
+                style={{ marginHorizontal: 10, lineHeight: 20 }}
               >
-                I clarify that I am 18 years old and I agree to the{" "}
+                I certify that I am 18 years old and I agree to the{" "}
                 <AppText
                   color={GOLDEN}
                   style={{
@@ -144,15 +226,15 @@ const Login = () => {
               />
               <AppText
                 type={TWELVE}
-                weight={INTER_LIGHT}
+                weight={INTER_REGULAR}
                 color={TEXTGREY}
-                style={{ marginLeft: 10 }}
+                style={{ marginHorizontal: 10, lineHeight: 20 }}
               >
                 Agree to receiving promotional & marketing emails/ SMS.
               </AppText>
             </TouchableOpacityView>
             <View style={styles.bottomView}>
-              <AppText weight={INTER_LIGHT} color={TEXTGREY}>
+              <AppText weight={INTER_REGULAR} color={TEXTGREY}>
                 Need help?
               </AppText>
               <FastImage
@@ -185,6 +267,7 @@ const Login = () => {
           setIsRememberSelected={setIsRememberSelected}
           isRememberSelected={isRememberSelected}
           onOpenForgot={handleOpenForgot}
+          onCloseLogin={handleCloseLogin}
         />
       </RBSheet>
       <RBSheet
@@ -204,7 +287,7 @@ const Login = () => {
           },
         }}
       >
-        <ReferCode />
+        <ReferCode onCloseRefer={handleCloseRefer} setReferCode={setReferCode} referCode={referCode}/>
       </RBSheet>
       <RBSheet
         ref={refRBSheetForgot}
@@ -223,7 +306,7 @@ const Login = () => {
           },
         }}
       >
-        <ForgotPassword onCloseForgot={handleCloseForgot}/>
+        <ForgotPassword onCloseForgot={handleCloseForgot} setPhoneNumber={setPhoneNumber}/>
       </RBSheet>
       <RBSheet
         ref={refRBSheetOTP}
@@ -242,7 +325,15 @@ const Login = () => {
           },
         }}
       >
-        <LoginOTP onResetPassword={handleResetPassword}/>
+        <LoginOTP
+          onResetPassword={handleResetPassword}
+          setOtp={setOtp}
+          otp={otp}
+          phoneNumber={phoneNumber}
+          referCode={referCode}
+          onCloseOtp={handleCloseOtp}
+          isForgot={isForgot}
+        />
       </RBSheet>
       <RBSheet
         ref={refRBSheetPassword}
@@ -261,7 +352,7 @@ const Login = () => {
           },
         }}
       >
-        <ResetPassword />
+        <ResetPassword onCloseResetPass={handleCloseResetPass} signId={phoneNumber} otp={otp} setIsForgot={setIsForgot}/>
       </RBSheet>
     </AppSafeAreaView>
   );
@@ -275,7 +366,7 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   mainView: {
-    marginTop: 5,
+    marginTop: 20,
     flex: 1,
     backgroundColor: colors.darkBlue,
     borderTopLeftRadius: 50,
@@ -292,7 +383,7 @@ const styles = StyleSheet.create({
     marginTop: 30,
   },
   bottomView: {
-    marginTop: 40,
+    marginTop: 10,
     alignSelf: "center",
     flexDirection: "row",
     alignItems: "center",

@@ -1,5 +1,5 @@
 import React from "react";
-import { View } from "react-native";
+import { Pressable, TouchableOpacity, View } from "react-native";
 import { TouchableOpacityView } from "../TouchableOpacityView";
 import { tick } from "../../helper/image";
 import styles from "./styles";
@@ -16,11 +16,14 @@ const Checkbox = ({
   login,
 }) => {
   return (
-    <TouchableOpacityView
+    <Pressable
       onPress={onPress}
-      underlayColor="transparent"
       disabled={disabled}
-      style={{}}
+      style={{ height: 17, width: 17 }}
+      android_ripple={{
+        foreground: true,
+        color: !login ? colors.white : colors.darkBlue,
+      }}
     >
       <View style={[styles.linearGradientWrapper, style]}>
         {value ? (
@@ -36,7 +39,7 @@ const Checkbox = ({
           <View style={styles.unchecked(colors)} />
         )}
       </View>
-    </TouchableOpacityView>
+    </Pressable>
   );
 };
 

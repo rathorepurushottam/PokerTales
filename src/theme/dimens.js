@@ -7,7 +7,7 @@ export const Screen = {
 
 export const Primary = {
   Width: 353,
-  Height: 45,
+  Height: 60,
 };
 
 export const Logo = {

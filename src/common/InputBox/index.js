@@ -1,7 +1,7 @@
 import { View, TextInput } from 'react-native';
 import React from 'react';
 import styles from './styles';
-import { AppText, FORTEEN, INTER_MEDIUM, TWELVE, TWENTY_FIVE } from '../AppText';
+import { AppText, FORTEEN, INTER_MEDIUM, SIXTEEN, TWELVE, TWENTY_FIVE } from '../AppText';
 import FastImage from 'react-native-fast-image';
 import { eye_close, eye_open } from '../../helper/image';
 import { TouchableOpacityView } from '../TouchableOpacityView';
@@ -28,6 +28,9 @@ const InputBox = ({
     editable,
     top,
     phone,
+    onFocus,
+    onBlur,
+    containerStyle,
     ...props
 }) => {
     return (
@@ -44,22 +47,16 @@ const InputBox = ({
 
             <View style={styles.gradient}>
                 <View
-                    style={{
+                    style={[{
                         // borderWidth: 1,
                         borderRadius: 10,
                         backgroundColor: "#FFFFFF1A",
                         flexDirection: 'row',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        marginTop: top ? 10 : 0
-                    }}>
-                    {/* {image && (
-            <FastImage source={eye_close} resizeMode='contain' tintColor={colors.darkGreen} style={{
-              height: 20,
-              width: 20,
-              marginLeft: 5
-            }} />
-          )} */}
+                        marginTop: top ? 10 : 0,
+                        // borderColor: "red"
+                    }, containerStyle]}>
                     {phone && (<View style={{
                         height: 20,
                         width: 40,
@@ -68,7 +65,7 @@ const InputBox = ({
                         borderRightWidth: 1,
                         borderRightColor: "#FFFFFF26"
                     }}>
-                        <AppText type={FORTEEN}>+91</AppText>
+                        <AppText type={SIXTEEN}>+91</AppText>
                     </View>)}
 
                     <TextInput
@@ -90,6 +87,8 @@ const InputBox = ({
                         keyboardType={keyboardType}
                         maxLength={maxLength}
                         editable={editable}
+                        onFocus={onFocus}
+                        onBlur={onBlur}
                     />
                     {isPassword && (
                         <TouchableOpacityView

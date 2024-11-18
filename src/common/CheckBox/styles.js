@@ -5,7 +5,7 @@ const styles = StyleSheet.create({
   selectedUIFilter: (type) => ({
     // justifyContent: 'center',
     // alignItems: 'center',
-    borderRadius: 2,
+    borderRadius: 4,
     height:17,
     width:17,
     backgroundColor: colors.white,
@@ -27,8 +27,9 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     borderColor: colors.gray,
     borderWidth: 1,
-    height:18,
-    width:18,    
+    height:17,
+    width:17,    
+    alignItems: "center"
   },
 
 });
