@@ -5,6 +5,8 @@ export const initialState = {
   ibatBalance: undefined,
   userWalletData: undefined,
   kycDetails: null,
+  aadharDetails: [],
+  panDetails: [],
   depositTransactions: [],
   contestTransactions: [],
   withdrawalsTransactions: [],
@@ -42,6 +44,12 @@ export const profileSlice = createSlice({
     setActivite: (state, { payload }) => {
       state.SaveActivite = payload;
     },
+    setAadharDetails: (state, { payload }) => {
+      state.aadharDetails = payload;
+    },
+    setPanDetails: (state, { payload }) => {
+      state.panDetails = payload;
+    },
   },
 });
 
@@ -54,6 +62,8 @@ export const {
   setKycDetails,
   setActivite,
   setWalletCreate,
+  setAadharDetails,
+  setPanDetails,
 } = profileSlice.actions;
 
 export default profileSlice.reducer;

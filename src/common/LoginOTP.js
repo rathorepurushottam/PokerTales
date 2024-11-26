@@ -16,11 +16,16 @@ import { colors } from "../theme/color";
 import OTPInputView from "@twotalltotems/react-native-otp-input";
 import FastImage from "react-native-fast-image";
 import { timerIcon } from "../helper/image";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { otpVerification, userSignup } from "../actions/authActions";
+import { SpinnerSecond } from "./SnipperSecond";
+import { universalPaddingHorizontal } from "../theme/dimens";
 
 const LoginOTP = ({ otp, setOtp, phoneNumber, referCode, onCloseOtp, isForgot, onResetPassword }) => {
   const dispatch = useDispatch();
+  const loading = useSelector((state) => {
+    return state.auth.isLoading;
+  });
   const [resendButtonDisabledTime, setResendButtonDisabledTime] = useState(
     RESEND_OTP_TIME_LIMIT
   );
@@ -90,7 +95,7 @@ const LoginOTP = ({ otp, setOtp, phoneNumber, referCode, onCloseOtp, isForgot, o
       <AppText
         type={TWENTY}
         color={BLUE}
-        style={{ marginVertical: 15 }}
+        style={{ marginVertical: 15, paddingHorizontal: universalPaddingHorizontal }}
         weight={INTER_SEMI_BOLD}
       >
         Verification
@@ -111,6 +116,7 @@ const LoginOTP = ({ otp, setOtp, phoneNumber, referCode, onCloseOtp, isForgot, o
           alignSelf: "center",
           marginTop: 20,
           height: 50,
+          paddingHorizontal: universalPaddingHorizontal
         }}
         pinCount={6}
         code={otp}
@@ -177,6 +183,7 @@ const LoginOTP = ({ otp, setOtp, phoneNumber, referCode, onCloseOtp, isForgot, o
           )}
         </View>
       </View>
+      <SpinnerSecond loading={loading} />
     </View>
   );
 };
@@ -202,5 +209,6 @@ const styles = StyleSheet.create({
   menuView: {
     flexDirection: "row",
     justifyContent: "space-between",
+    paddingHorizontal: universalPaddingHorizontal
   },
 });

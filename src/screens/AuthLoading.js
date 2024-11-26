@@ -13,32 +13,25 @@ import { splash } from '../helper/image';
 
 import { Screen } from '../theme/dimens';
 import { AUTHSTACK } from '../navigation/routes';
+import { useDispatch, useSelector } from 'react-redux';
+import { getUserProfile } from '../actions/profileAction';
+import { SpinnerSecond } from '../common/SnipperSecond';
 
 const AuthLoading = () => {
-    //   const dispatch = useDispatch();
+      const dispatch = useDispatch();
+      const loading = useSelector((state) => {
+        return state.auth.isLoading;
+    });
     useEffect(() => {
         setTimeout(() => {
-            bootstrapAsync();
+            dispatch(getUserProfile());
         }, 3000);
     }, []);
 
-    const bootstrapAsync = async () => {
-        try {
-            //   const token = await AsyncStorage.getItem(USER_TOKEN_KEY);
-            if (false) {
-                // NavigationService.reset(OTP);
-                // dispatch(getUserProfile(true, false));
-            } else {
-                NavigationService.navigate(AUTHSTACK);
-            }
-        } catch (e) {
-            console.log(e);
-        }
-    };
     return (
         <AppSafeAreaView>
             <FastImage source={splash} resizeMode="cover" style={styles.splashImage}/>
-            {/* <SpinnerSecond loading={true} /> */}
+            <SpinnerSecond loading={loading} />
         </AppSafeAreaView>
     );
 };

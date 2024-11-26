@@ -3,18 +3,22 @@ import { CUSTOMER_TYPE } from '../../types';
 export default appOperation => ({
   log_out: data => appOperation.post(`client_logout`, data, CUSTOMER_TYPE),
   get_profile: () =>
-    appOperation.get(`user/profile`, undefined, undefined, CUSTOMER_TYPE),
-  get_wallet: () =>
-    appOperation.get(`wallet/user-wallet`, undefined, undefined, CUSTOMER_TYPE),
+    appOperation.get(`user/get-profile`, undefined, undefined, CUSTOMER_TYPE),
+  get_aadhar_otp: (data) =>
+    appOperation.post(`kyc/get-aadhar-otp`, data, CUSTOMER_TYPE),
   walletcreate: id =>
     appOperation.post(`wallet/create-wallet?user=${id}`, {}, CUSTOMER_TYPE),
   getKycDetails: () =>
-    appOperation.get(`user/kyc-details`, undefined, undefined, CUSTOMER_TYPE),
+    appOperation.get(`kyc/get-kyc`, undefined, undefined, CUSTOMER_TYPE),
   sendKycOtp: data =>
     appOperation.post(`user/send-kyp-otp`, data, CUSTOMER_TYPE),
+  verifyPanNumber: data =>
+    appOperation.post(`kyc/verify-pan`, data, CUSTOMER_TYPE),
   verifyKycOtp: data =>
-    appOperation.post(`user/verify-kyc-otp`, data, CUSTOMER_TYPE),
-  updateKyc: data => appOperation.post(`user/update-kyc`, data, CUSTOMER_TYPE),
+    appOperation.post(`kyc/verify-aadhar-otp`, data, CUSTOMER_TYPE),
+  submit_aadhar_details: data => appOperation.post(`kyc/submit-aadhar-kyc`, data, CUSTOMER_TYPE),
+  submit_pan_details: data => appOperation.post(`kyc/submit-pan-kyc`, data, CUSTOMER_TYPE),
+  user_log_out: data => appOperation.post(`user/log-out`, data, CUSTOMER_TYPE),
   uploadImg: data => appOperation.post(`upload`, data, CUSTOMER_TYPE),
   getSeriesData: () =>
     appOperation.post('TeamData/Serieslist', {}, CUSTOMER_TYPE),

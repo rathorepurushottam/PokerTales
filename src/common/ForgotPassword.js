@@ -11,10 +11,15 @@ import {
 import InputBox from "./InputBox";
 import { toastAlert, validateEmail, validatePhoneNumber } from "../helper/utility";
 import { forgotPassword, userSignup } from "../actions/authActions";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { SpinnerSecond } from "./SnipperSecond";
+import { universalPaddingHorizontal } from "../theme/dimens";
 
 const ForgotPassword = ({ onCloseForgot, setPhoneNumber }) => {
   const dispatch = useDispatch();
+  const loading = useSelector((state) => {
+    return state.auth.isLoading;
+  });
   const [signId, setSignId] = useState("");
   const [signFocus, setSignFocus] = useState(false);
 
@@ -60,7 +65,7 @@ const ForgotPassword = ({ onCloseForgot, setPhoneNumber }) => {
       <AppText
         type={TWENTY}
         color={BLUE}
-        style={{ marginVertical: 15 }}
+        style={{ marginVertical: 15, paddingHorizontal: universalPaddingHorizontal, }}
         weight={INTER_SEMI_BOLD}
       >
         Forgot Password
@@ -76,6 +81,7 @@ const ForgotPassword = ({ onCloseForgot, setPhoneNumber }) => {
           backgroundColor: "#F5F5F5",
           height: 55,
         }}
+        style={{paddingHorizontal: universalPaddingHorizontal,}}
         onFocus={() => setSignFocus(true)}
         onBlur={() => setSignFocus(false)}
         onChange={(value) => setSignId(value)}
@@ -86,9 +92,10 @@ const ForgotPassword = ({ onCloseForgot, setPhoneNumber }) => {
         title={"Get OTP"}
         weight={INTER_MEDIUM}
         disabled={!signId}
-        buttonStyle={{ marginTop: 40 }}
+        buttonStyle={{ marginTop: 40, paddingHorizontal: universalPaddingHorizontal, }}
         onPress={handleForgotPassword}
       />
+      <SpinnerSecond loading={loading} />
     </View>
   );
 };

@@ -8,7 +8,8 @@ const styles = StyleSheet.create({
     height: Primary.Height,
     borderRadius: 5,
     paddingHorizontal: 30,
-    flex:1
+    flex:1,
+    color: colors.black,
   },
   gradient: {
     height: Primary.Height,

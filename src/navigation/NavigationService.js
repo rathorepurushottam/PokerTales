@@ -41,6 +41,11 @@ function goBack() {
 function openDrawer() {
   navigator.dispatch(DrawerActions.openDrawer());
 }
+
+function drawerAction () {
+  navigator.dispatch(DrawerActions.toggleDrawer());
+};
+
 function closeDrawer() {
   navigator.dispatch(DrawerActions.closeDrawer());
 }
@@ -60,4 +65,5 @@ export default {
   reset,
   push,
   replace,
+  drawerAction,
 };

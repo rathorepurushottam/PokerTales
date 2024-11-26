@@ -3,11 +3,16 @@ import { StyleSheet, View } from "react-native";
 import PrimaryButton from "./PrimaryButton";
 import { AppText, BLUE, INTER_MEDIUM, INTER_SEMI_BOLD, TWENTY } from "./AppText";
 import InputBox from "./InputBox";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { valideReferCode } from "../actions/authActions";
+import { SpinnerSecond } from "./SnipperSecond";
+import { universalPaddingHorizontal } from "../theme/dimens";
 
 const ReferCode = ({onCloseRefer, referCode, setReferCode}) => {
   const dispatch = useDispatch();
+  const loading = useSelector((state) => {
+    return state.auth.isLoading;
+  });
   const [signFocus, setSignFocus] = useState(false);
 
 
@@ -34,7 +39,7 @@ const ReferCode = ({onCloseRefer, referCode, setReferCode}) => {
           <AppText
             type={TWENTY}
             color={BLUE}
-            style={{ marginVertical: 15 }}
+            style={{ marginVertical: 15, paddingHorizontal: universalPaddingHorizontal, }}
             weight={INTER_SEMI_BOLD}
           >
             Referral Code
@@ -50,6 +55,7 @@ const ReferCode = ({onCloseRefer, referCode, setReferCode}) => {
               backgroundColor: "#F5F5F5",
               height: 55,
             }}
+            style={{paddingHorizontal: universalPaddingHorizontal}}
             value={referCode}
             onChange={(value) => setReferCode(value)}
             onFocus={() => setSignFocus(true)}
@@ -60,9 +66,10 @@ const ReferCode = ({onCloseRefer, referCode, setReferCode}) => {
             title={"Apply"}
             weight={INTER_MEDIUM}
             disabled={!referCode}
-            buttonStyle={{ marginTop: 40 }}
+            buttonStyle={{ marginTop: 40, paddingHorizontal: universalPaddingHorizontal }}
             onPress={handleReferCode}
           />
+          <SpinnerSecond loading={loading} />
         </View>
       );
 };

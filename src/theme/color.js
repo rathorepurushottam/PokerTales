@@ -38,7 +38,7 @@ export const colors = {
     lighteshRef: '#FFD5D5',
     rbSheetBack: '#232528',
     backgroundupload: '#295B91',
-    brownYellow: "#DBA63D",
+    brownYellow: "#F3DE98",
     background: '#343434',
     buttoncolor: '#3EAA35',
     bottomBackgroundColor: '#3F3F3F',
@@ -57,7 +57,11 @@ export const colors = {
     focusedText: '#68C1BC',
     lightText: "#3A5EB0",
     lightMyText: "#828282",
-    newText: "#2A3E6C"
+    newText: "#2A3E6C",
+    borderBlueColor: "#041B3A",
+    imageBackColor: "#F3DD97",
+    imageColor: "#051F44",
+    bannerBackColor: "#091831"
   };
   export const NewColor = {
     linerBabyPink: '#803090',

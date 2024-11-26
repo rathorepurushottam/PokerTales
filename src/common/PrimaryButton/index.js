@@ -31,7 +31,7 @@ const PrimaryButton = ({
         colors={
           !disabled
             ? [colors.playerDetailsLinerTwo, colors.playerDetailsLinerOne]
-            : ["#00000033", "#00000033"]
+            : ["grey", "grey"]
         }
         start={{ x: 0, y: 2}}
         end={{ x: 0, y: 0}}

@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { ImageBackground, StyleSheet, View } from "react-native";
 import RBSheet from "react-native-raw-bottom-sheet";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 import { AppSafeAreaView } from "../common/AppSafeAreaView";
 import { backgroundImage, whatsupAppIcon } from "../helper/image";
@@ -35,6 +35,7 @@ import LoginOTP from "../common/LoginOTP";
 import ResetPassword from "../common/ResetPassword";
 import { toastAlert, validatePhoneNumber } from "../helper/utility";
 import { userSignup } from "../actions/authActions";
+import { SpinnerSecond } from "../common/SnipperSecond";
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -43,6 +44,9 @@ const Login = () => {
   const refRBSheetForgot = useRef();
   const refRBSheetOTP = useRef();
   const refRBSheetPassword = useRef();
+  const loading = useSelector((state) => {
+    return state.auth.isLoading;
+  });
   const [isAgeSelected, setIsAgeSelected] = useState(false);
   const [isPromonSelected, setIsPromoSelected] = useState(false);
   const [isRememberSelected, setIsRememberSelected] = useState(true);
@@ -74,6 +78,10 @@ const Login = () => {
 
   };
 
+  const handleOtp = () => {
+    refRBSheetOTP?.current?.open();
+  }
+
   const handleOTP = () => {
     if (!phoneNumber) {
       toastAlert.showToastError("Please enter Mobile Number");
@@ -98,11 +106,10 @@ const Login = () => {
         type: "loginOtp",
       };
 
-      dispatch(userSignup(data));
+      dispatch(userSignup(data, handleOtp));
     }
 
-    // setIsLogin(false);
-    refRBSheetOTP.current.open();
+    setIsForgot(false);
     setOtp('');
   };
 
@@ -144,6 +151,7 @@ const Login = () => {
               placeholder={"Enter mobile number"}
               top
               phone
+              keyboardType={'numeric'}
               textInputStyle={{ color: "white", fontSize: 16 }}
               onFocus={() => setPhoneFocus(true)}
               onBlur={() => setPhoneFocus(false)}
@@ -151,6 +159,7 @@ const Login = () => {
                 borderWidth: phoneFocus ? 1 : 0,
                 borderColor: phoneFocus && "#FFFFFF26",
               }}
+              maxLength={10}
               value={phoneNumber}
               onChange={setPhoneNumber}
             />
@@ -187,12 +196,13 @@ const Login = () => {
             </View>
             <PrimaryButton
               title={"Get OTP"}
+              disabled={!phoneNumber}
               weight={INTER_MEDIUM}
               onPress={handleOTP}
             />
             <TouchableOpacityView
               onPress={() => setIsAgeSelected(!isAgeSelected)}
-              style={styles.checkbox}
+              style={[styles.checkbox, {marginTop: 30}]}
             >
               <Checkbox
                 onPress={() => setIsAgeSelected(!isAgeSelected)}
@@ -255,7 +265,6 @@ const Login = () => {
             backgroundColor: colors.white,
             borderTopLeftRadius: 40,
             borderTopRightRadius: 40,
-            paddingHorizontal: universalPaddingHorizontal,
           },
           draggableIcon: {
             backgroundColor: "transparent",
@@ -279,7 +288,6 @@ const Login = () => {
             backgroundColor: colors.white,
             borderTopLeftRadius: 40,
             borderTopRightRadius: 40,
-            paddingHorizontal: universalPaddingHorizontal,
           },
           draggableIcon: {
             backgroundColor: "transparent",
@@ -298,7 +306,6 @@ const Login = () => {
             backgroundColor: colors.white,
             borderTopLeftRadius: 40,
             borderTopRightRadius: 40,
-            paddingHorizontal: universalPaddingHorizontal,
           },
           draggableIcon: {
             backgroundColor: "transparent",
@@ -317,7 +324,6 @@ const Login = () => {
             backgroundColor: colors.white,
             borderTopLeftRadius: 40,
             borderTopRightRadius: 40,
-            paddingHorizontal: universalPaddingHorizontal,
           },
           draggableIcon: {
             backgroundColor: "transparent",
@@ -344,7 +350,6 @@ const Login = () => {
             backgroundColor: colors.white,
             borderTopLeftRadius: 40,
             borderTopRightRadius: 40,
-            paddingHorizontal: universalPaddingHorizontal,
           },
           draggableIcon: {
             backgroundColor: "transparent",
@@ -354,6 +359,7 @@ const Login = () => {
       >
         <ResetPassword onCloseResetPass={handleCloseResetPass} signId={phoneNumber} otp={otp} setIsForgot={setIsForgot}/>
       </RBSheet>
+      <SpinnerSecond loading={loading} />
     </AppSafeAreaView>
   );
 };
@@ -380,7 +386,7 @@ const styles = StyleSheet.create({
   },
   checkbox: {
     flexDirection: "row",
-    marginTop: 30,
+    marginTop: 10,
   },
   bottomView: {
     marginTop: 10,

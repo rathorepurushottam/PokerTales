@@ -12,6 +12,8 @@ import { FCM_TOKEN_KEY, USER_TOKEN_KEY } from '../libs/constant';
 //   OTP,
 // } from '../navigation/routes';
 import { setLoading } from '../slices/authSlice';
+import { BOTTOM_NAVIGATION_STACK } from '../navigation/routes';
+import NavigationService from '../navigation/NavigationService';
 // import { setUserData, setWalletCreate } from '../slices/profileSlice';
 // import { getUserProfile } from './profileAction';
 //done
@@ -44,8 +46,6 @@ export const userSignup =
         dispatch(setLoading(true));
         const response = await appOperation.guest.register(data);
         console.log(response, "response");
-      
-  
         if (response?.success) {
         //   NavigationService.navigate(MYBATTLEOTP, { data: data, id: 'register', permissionSave: permissionSave });
         toastAlert.showToastError(response?.message);
@@ -55,6 +55,7 @@ export const userSignup =
         }
         // NavigationService.navigate(OTP)
       } catch (e) {
+        dispatch(setLoading(false));
         console.log(e);
         logError(e);
         toastAlert.showToastError(e?.message);
@@ -77,7 +78,7 @@ export const otpVerification =
           // dispatch(setUserData(response?.data?._id));
           // dispatch(updateDeviceToken());
           // dispatch(getUserProfile(true, false));
-          // NavigationService.navigate(BOTTOM_NAVIGATION_STACK);
+          NavigationService.navigate(BOTTOM_NAVIGATION_STACK);
           toastAlert.showToastError(response?.message);
           onCloseOtp();
         } else {
@@ -91,6 +92,7 @@ export const otpVerification =
         //   toastAlert.showToastError(response?.message);
         // }
       } catch (e) {
+        dispatch(setLoading(false));
         logError(e);
         toastAlert.showToastError(e?.message);
       } finally {
@@ -108,10 +110,12 @@ export const loginUsingPassword =
       if (response?.success) {
          toastAlert.showToastError(response?.message)
          onCloseLogin();
+         NavigationService.navigate(BOTTOM_NAVIGATION_STACK);
       } else {
         toastAlert.showToastError(response?.message);
       }
     } catch (e) {
+      dispatch(setLoading(false));
       logError(e);
       toastAlert.showToastError(e?.message);
     } finally {
@@ -132,6 +136,7 @@ export const forgotPassword =
         toastAlert.showToastError(response?.message);
       }
     } catch (e) {
+      dispatch(setLoading(false));
       logError(e);
       toastAlert.showToastError(e?.message);
     } finally {
@@ -152,6 +157,7 @@ export const valideReferCode = (data, onClose = () => {}, setReferCode) => async
       setReferCode('')
     }
   } catch (e) {
+    dispatch(setLoading(false));
     logError(e);
     toastAlert.showToastError(e?.message);
   } finally {
@@ -174,41 +180,4 @@ export const resetSignUpOtp = id => async (dispatch: any) => {
   } finally {
     dispatch(setLoading(false));
   }
-};
-
-export const refreshToken = () => async () => {
-  try {
-    const response = await appOperation.customer.refresh_token();
-    if (response?.success) {
-      appOperation.setCustomerToken(response?.data?.accessToken);
-      await AsyncStorage.setItem(USER_TOKEN_KEY, response?.data?.accessToken);
-    }
-  } catch (e) {
-    logError(e);
-    // toastAlert.showToastError(e?.message);
-  }
-};
-
-export const updateDeviceToken = () => async dispatch => {
-  let fcmToken = await AsyncStorage.getItem(FCM_TOKEN_KEY);
-
-  let data = {
-    fcm_device: Platform.OS,
-    fcm_token: fcmToken,
-  };
-  try {
-    const response = await appOperation.customer?.fcm_token(data);
-  } catch (e) {
-    logError(e);
-  }
-};
-
-
-
-
-//done
-export const userLogout = () => async () => {
-  appOperation.setCustomerToken('');
-  await AsyncStorage.removeItem(USER_TOKEN_KEY);
-//   NavigationService.reset(AUTHSTACK);
 };

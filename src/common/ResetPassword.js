@@ -23,18 +23,23 @@ import PrimaryButton from "./PrimaryButton";
 import { useRef, useState } from "react";
 import ForgotPassword from "./ForgotPassword";
 import { toastAlert, validatePassword } from "../helper/utility";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { forgotPassword } from "../actions/authActions";
+import { SpinnerSecond } from "./SnipperSecond";
 
 
 const ResetPassword = ({ onCloseResetPass, signId, otp, setIsForgot }) => {
   const dispatch = useDispatch();
+  const loading = useSelector((state) => {
+    return state.auth.isLoading;
+  });
   const [showPass, setShowPass] = useState(true);
   const [showConfPass, setShowConfPass] = useState(true);
   const [newPassFocus, setNewPassFocus] = useState(false);
   const [conPassFocus, setConPassFocus] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPass, setConfirmPass] = useState('');
+  const [validPass, setValidPass] = useState(false);
 
 
   const handleResetPassword = () => {
@@ -64,6 +69,11 @@ const ResetPassword = ({ onCloseResetPass, signId, otp, setIsForgot }) => {
     dispatch(forgotPassword(data, onCloseResetPass))
   }
 
+  const handleValidatPass = (value) => {
+    setConfirmPass(value);
+    (validatePassword(newPassword) && validatePassword(value)) ? setValidPass(true) : setValidPass(false);
+  };
+
   
   return (
     <View styles={styles.mainView}>
@@ -81,7 +91,7 @@ const ResetPassword = ({ onCloseResetPass, signId, otp, setIsForgot }) => {
       <AppText
         type={TWENTY}
         color={BLUE}
-        style={{ marginVertical: 15 }}
+        style={{ marginVertical: 15,  paddingHorizontal: universalPaddingHorizontal, }}
         weight={INTER_SEMI_BOLD}
       >
         New Password
@@ -97,6 +107,7 @@ const ResetPassword = ({ onCloseResetPass, signId, otp, setIsForgot }) => {
           backgroundColor: "#F5F5F5",
           height: 55,
         }}
+        style={{paddingHorizontal: universalPaddingHorizontal}}
         value={newPassword}
         onChange={(value) => setNewPassword(value)}
         onBlur={() => setNewPassFocus(false)}
@@ -116,8 +127,8 @@ const ResetPassword = ({ onCloseResetPass, signId, otp, setIsForgot }) => {
         >
           <Checkbox
             value={true}
-            style={{ borderColor: colors.black, borderRadius: 20 }}
-            innerStyle={{ backgroundColor: colors.darkBlue, borderRadius: 20 }}
+            style={{ borderColor: colors.green, borderRadius: 20 }}
+            innerStyle={{ backgroundColor: !validPass ? colors.darkBlue : colors.green, borderRadius: 20 }}
             login
           />
           <AppText type={FORTEEN} color={BLACK} weight={INTER_MEDIUM} style={{marginLeft: 10}}>
@@ -138,8 +149,9 @@ const ResetPassword = ({ onCloseResetPass, signId, otp, setIsForgot }) => {
           marginTop: 15,
           height: 55,
         }}
+        style={{paddingHorizontal: universalPaddingHorizontal}}
         value={confirmPass}
-        onChange={(value) => setConfirmPass(value)}
+        onChange={(value) => handleValidatPass(value)}
         onBlur={() => setConPassFocus(false)}
         onFocus={() => setConPassFocus(true)}
         isPassword={true}
@@ -152,9 +164,9 @@ const ResetPassword = ({ onCloseResetPass, signId, otp, setIsForgot }) => {
         weight={INTER_MEDIUM}
         disabled={!newPassword || !confirmPass}
         onPress={handleResetPassword}
-        buttonStyle={{ marginTop: 50 }}
+        buttonStyle={{ marginTop: 50, paddingHorizontal: universalPaddingHorizontal}}
       />
-     
+     <SpinnerSecond loading={loading} />
     </View>
   );
 };
@@ -163,12 +175,13 @@ export default ResetPassword;
 
 const styles = StyleSheet.create({
   mainView: {
-    flex: 1,
+    flex: 1
   },
   referView: {
     // flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 30,
+    paddingHorizontal: universalPaddingHorizontal,
   },
   checkbox: {
     flexDirection: "row",

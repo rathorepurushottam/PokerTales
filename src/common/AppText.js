@@ -47,6 +47,7 @@ export const LIGHTTEXT = "LIGHTTEXT";
 export const LIGHTMYTEXT = "LIGHTMYTEXT";
 export const NEWTEXT = "NEWTEXT";
 export const LIGHTDISABLE = "LIGHTDISABLE";
+export const BROWNYELLOW = "BROWNYELLOW";
 
 
 export const GRY = 'GRY';
@@ -271,6 +272,9 @@ const getTextStyle = (
       break;
       case LIGHTDISABLE:
       style['color'] = NewColor.linerBlacklightEight;
+      break;
+      case BROWNYELLOW:
+      style['color'] = colors.brownYellow;
       break;
     default:
       style['color'] = 'white';

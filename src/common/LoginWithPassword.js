@@ -23,17 +23,22 @@ import PrimaryButton from "./PrimaryButton";
 import { useRef, useState } from "react";
 import ForgotPassword from "./ForgotPassword";
 import { toastAlert, validateEmail, validatePassword, validatePhoneNumber } from "../helper/utility";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { loginUsingPassword } from "../actions/authActions";
+import { SpinnerSecond } from "./SnipperSecond";
 
 
 const LoginWithPassword = ({ setIsRememberSelected, isRememberSelected, onOpenForgot, onCloseLogin }) => {
   const dispatch = useDispatch();
+  const loading = useSelector((state) => {
+    return state.auth.isLoading;
+  });
   const [showPass, setShowPass] = useState(true);
   const [signId, setSignId] = useState("");
   const [password, setPassword] = useState("");
   const [signFocus, setSignFocus] = useState(false);
   const [passFocus, setPassFocus] = useState(false);
+  const [validPass, setValidPass] = useState(true);
 
 
   const handleLoginUsingPassword = () => {
@@ -52,10 +57,14 @@ const LoginWithPassword = ({ setIsRememberSelected, isRememberSelected, onOpenFo
     }
   
     if (!password) {
+      setPassFocus(false);
+      setValidPass(false);
       toastAlert.showToastError("Please enter password");
       return;
     };
     if (!validatePassword(password)) {
+      setPassFocus(false);
+      setValidPass(false);
       toastAlert.showToastError("Invalid password format.");
       return;
     }
@@ -85,7 +94,7 @@ const LoginWithPassword = ({ setIsRememberSelected, isRememberSelected, onOpenFo
       <AppText
         type={TWENTY}
         color={BLUE}
-        style={{ marginVertical: 15 }}
+        style={{ marginVertical: 15, paddingHorizontal: universalPaddingHorizontal }}
         weight={INTER_SEMI_BOLD}
       >
         Login via Password
@@ -101,6 +110,7 @@ const LoginWithPassword = ({ setIsRememberSelected, isRememberSelected, onOpenFo
           backgroundColor: "#F5F5F5",
           height: 55,
         }}
+        style={{paddingHorizontal: universalPaddingHorizontal}}
         onFocus={() => setSignFocus(true)}
         onBlur={() => setSignFocus(false)}
         onChange={(value) => setSignId(value)}
@@ -112,12 +122,13 @@ const LoginWithPassword = ({ setIsRememberSelected, isRememberSelected, onOpenFo
         placeholderTextColor={"#00000066"}
         textInputStyle={{
           borderWidth: 1,
-          borderColor: passFocus ? "#1251AE" : "#E4E4E4",
+          borderColor: passFocus ? "#1251AE" : !validPass? "red" : "#E4E4E4",
           borderRadius: 12,
           backgroundColor: "#F5F5F5",
           marginTop: 25,
           height: 55,
         }}
+        style={{paddingHorizontal: universalPaddingHorizontal}}
         onFocus={() => setPassFocus(true)}
         onBlur={() => setPassFocus(false)}
        value={password}
@@ -152,10 +163,10 @@ const LoginWithPassword = ({ setIsRememberSelected, isRememberSelected, onOpenFo
         title={"Login"}
         weight={INTER_MEDIUM}
         disabled={(!signId || !password)}
-        buttonStyle={{ marginTop: 40 }}
+        buttonStyle={{ marginTop: 40, paddingHorizontal: universalPaddingHorizontal }}
         onPress={handleLoginUsingPassword}
       />
-     
+     <SpinnerSecond loading={loading} />
     </View>
   );
 };
@@ -165,11 +176,13 @@ export default LoginWithPassword;
 const styles = StyleSheet.create({
   mainView: {
     flex: 1,
+    paddingHorizontal: universalPaddingHorizontal,
   },
   referView: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 60,
+    paddingHorizontal: universalPaddingHorizontal
   },
   checkbox: {
     flexDirection: "row",
