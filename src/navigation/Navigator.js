@@ -92,8 +92,7 @@ const Navigator = () => {
 
     return () => backHandler.remove(); // Cleanup on unmount
   }, []);
-  
- 
+
   return (
     <NavigationContainer
       ref={(navigatorRef) => {
@@ -125,8 +124,7 @@ const RootStackScreen = () => (
     />
     <Stack.Screen
       name={BOTTOM_NAVIGATION_STACK}
-      component={BottomMainTab}
-      options={{ headerShown: false }}
+      component={HomeDrawer} // Use HomeDrawer here
     />
     <Stack.Screen name={SUB_MENU_SCREEN} component={SubMenu} />
     <Stack.Screen name={ADD_CASH_SCREEN} component={AddCash} />
@@ -204,55 +202,37 @@ const BottomMainTab = () => {
   const [modalVisible, setModalVisible] = useState(false);
   return (
     <><BottomTab.Navigator
-      backBehavior="initialRoute"
-      // initialRouteName={HOME_SCREEN_MAIN}
-      screenOptions={{
-        headerShown: false,
-        tabBarHideOnKeyboard: true,
-        tabBarBackground: () => <TabBarBackground />,
-        tabBarStyle: {
-          backgroundColor: colors.menuText,
-          height: 60,
-          borderTopWidth: 0,
-          paddingVertical: 10,
-        },
-
-        // tabBarAllowFontScaling: true,
-        tabBarShowLabel: false,
-      }}
-    >
-      <BottomTab.Screen
-        name={BOTTOM_TAB_HOMESCREEN}
-        component={HomeDrawer}
-        listeners={({ navigation }) => ({
-          tabPress: () => {
-            // Trigger vibration on tab press
-            Vibration.vibrate(50); // Short vibration of 50ms
-          },
-        })}
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <View style={{ alignItems: "center", width: 50 }}>
+    backBehavior="initialRoute"
+    screenOptions={{
+      headerShown: false,
+      tabBarHideOnKeyboard: true,
+      tabBarBackground: () => <TabBarBackground />,
+      tabBarStyle: {
+        backgroundColor: colors.menuText,
+        height: 60,
+        borderTopWidth: 0,
+        paddingVertical: 10,
+      },
+      tabBarShowLabel: false,
+    }}
+  >
+       <BottomTab.Screen
+          name={BOTTOM_TAB_HOMESCREEN}
+          component={Home}
+          options={{
+            tabBarIcon: ({ focused }) => (
               <FastImage
                 source={bottomMenuIcon}
                 tintColor={focused ? colors.goldenColor : colors.gray}
                 style={{
                   width: 25,
                   height: 25,
-                  marginTop: 30,
                 }}
-                resizeMode="contain" />
-              <AppText
-                style={{ marginTop: 4 }}
-                color={focused ? BROWNYELLOW : GRY}
-                weight={INTER_MEDIUM}
-                type={TEN}
-              >
-                Home
-              </AppText>
-            </View>
-          ),
-        }} />
+                resizeMode="contain"
+              />
+            ),
+          }}
+        />
       <BottomTab.Screen
         name={BOTTOM_TAB_CONTEST_SCREEN}
         component={MyRewardDrawer}
@@ -384,35 +364,25 @@ const BottomMainTab = () => {
   );
 };
 
-const HomeDrawer = ({ navigation }) => {
-  const isFocused = useIsFocused();
+const HomeDrawer = () => {
   return (
     <Drawer.Navigator
-      initialRouteName="Home"
-      drawerContent={(props) => (
-        <CustomDrawer
-          {...props}
-          navigation={navigation}
-          isFocused={isFocused}
-        />
-      )}
+      initialRouteName="BottomTabs"
+      drawerContent={(props) => <CustomDrawer {...props} />}
       screenOptions={{
         headerShown: false,
+        drawerType: "front", // Drawer slides over content
+        overlayColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent overlay
       }}
     >
       <Drawer.Screen
-        name="Home"
-        component={HomeStack}
+        name="BottomTabs"
+        component={BottomMainTab}
         options={{
-          // overlayColor: "transparent",
           drawerStyle: {
             width: "80%",
-            // backgroundColor: "transparent",
-            height: "100%",
-            // marginTop: 95,
           },
           sceneContainerStyle: { backgroundColor: "transparent" },
-          // headerShown: false,
         }}
       />
     </Drawer.Navigator>
