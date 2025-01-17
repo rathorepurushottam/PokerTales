@@ -40,8 +40,6 @@ const PanDetails = ({ onCloseAadharDetails, onChangeAddhar }) => {
     dispatch(submitPanDetails(onCloseAadharDetails));
   };
 
-  console.log(panDetails, "panDetails");
-
   return (
     <View styles={styles.mainView}>
       <View style={styles.sheetHeader}>

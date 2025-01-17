@@ -91,12 +91,12 @@ const styles = StyleSheet.create({
   },
   image: {
     width: 280,
-    height: 250,
+    height: 220,
   },
   paginationContainer: {
     position: "absolute",
     bottom: -20,
-    left: 160,
+    left: 180,
     width: 56,
     // backgroundColor: "red"
   },
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     height: 6,
   },
   mainContainer: {
-    height: 320,
+    height: 300,
     alignSelf: "center",
     alignItems: "center",
     marginTop: 25

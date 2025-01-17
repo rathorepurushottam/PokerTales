@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { ImageBackground, StyleSheet, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { ImageBackground, Linking, Modal, Platform, StyleSheet, TouchableOpacity, View } from "react-native";
 import RBSheet from "react-native-raw-bottom-sheet";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -36,6 +36,9 @@ import ResetPassword from "../common/ResetPassword";
 import { toastAlert, validatePhoneNumber } from "../helper/utility";
 import { userSignup } from "../actions/authActions";
 import { SpinnerSecond } from "../common/SnipperSecond";
+import NavigationService from "../navigation/NavigationService";
+import { SUB_MENU_SCREEN } from "../navigation/routes";
+import CustomModal from "../common/CustomModal";
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -47,8 +50,8 @@ const Login = () => {
   const loading = useSelector((state) => {
     return state.auth.isLoading;
   });
-  const [isAgeSelected, setIsAgeSelected] = useState(false);
-  const [isPromonSelected, setIsPromoSelected] = useState(false);
+  const [isAgeSelected, setIsAgeSelected] = useState(true);
+  const [isPromonSelected, setIsPromoSelected] = useState(true);
   const [isRememberSelected, setIsRememberSelected] = useState(true);
   // const [isLogin, setIsLogin] = useState(false);
   const [isForgot, setIsForgot] = useState(false);
@@ -56,6 +59,11 @@ const Login = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [otp, setOtp] = useState("");
   const [referCode, setReferCode] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+
+  const locationAccess = useSelector((state) => {
+    return state.auth.locationAccess;
+  });
 
   const handleOpenForgot = () => {
     refRBSheetLogin?.current?.close();
@@ -80,9 +88,15 @@ const Login = () => {
 
   const handleOtp = () => {
     refRBSheetOTP?.current?.open();
-  }
+  };
+
+  console.log(locationAccess, "locationAccess");
 
   const handleOTP = () => {
+    if (locationAccess !== 'granted') {
+      toastAlert.showToastError("Please allow location access to log in");
+      return;
+    };
     if (!phoneNumber) {
       toastAlert.showToastError("Please enter Mobile Number");
       return;
@@ -123,15 +137,18 @@ const Login = () => {
 
   const handleCloseResetPass = () => {
     refRBSheetPassword.current.close();
+    refRBSheetLogin.current.open();
   };
 
   const handleCloseOtp = () => {
-    console.log("close");
     refRBSheetOTP.current.close();
-  }
+    if (isForgot) {
+      refRBSheetForgot?.current?.close();
+    };
+  };
 
   return (
-    <AppSafeAreaView>
+    <AppSafeAreaView statusColor={'#032146'}>
       <KeyBoardAware style={{ paddingHorizontal: 0 }}>
         <ImageBackground
           source={backgroundImage}
@@ -162,6 +179,7 @@ const Login = () => {
               maxLength={10}
               value={phoneNumber}
               onChange={setPhoneNumber}
+              cursorColor={colors.white}
             />
             <View style={styles.referView}>
               <TouchableOpacityView
@@ -196,7 +214,7 @@ const Login = () => {
             </View>
             <PrimaryButton
               title={"Get OTP"}
-              disabled={!phoneNumber}
+              disabled={!phoneNumber || !isPromonSelected || !isAgeSelected || phoneNumber.length < 10}
               weight={INTER_MEDIUM}
               onPress={handleOTP}
             />
@@ -208,23 +226,30 @@ const Login = () => {
                 onPress={() => setIsAgeSelected(!isAgeSelected)}
                 value={isAgeSelected}
               />
+              <View>
               <AppText
                 type={TWELVE}
                 color={TEXTGREY}
                 weight={INTER_REGULAR}
-                style={{ marginHorizontal: 10, lineHeight: 20 }}
+                style={{ marginHorizontal: 10 }}
               >
-                I certify that I am 18 years old and I agree to the{" "}
-                <AppText
+                I certify that I am 18 years old and I agree to the 
+              </AppText>
+              <AppText
                   color={GOLDEN}
+                  onPress={() =>  NavigationService.navigate(SUB_MENU_SCREEN, {data: 'Terms & Conditions'})}
                   style={{
-                    borderBottomWidth: 1,
-                    borderBottomColor: colors.goldenColor,
+                    // borderBottomWidth: 1,
+                    // borderBottomColor: colors.goldenColor,
+                    // marginRight: 50,
+                    textDecorationLine: "underline",
+                    marginLeft: 12
                   }}
                 >
-                  Terms & Conditions
+                 Terms & Conditions
                 </AppText>
-              </AppText>
+              </View>
+              
             </TouchableOpacityView>
             <TouchableOpacityView
               onPress={() => setIsPromoSelected(!isPromonSelected)}
@@ -243,7 +268,7 @@ const Login = () => {
                 Agree to receiving promotional & marketing emails/ SMS.
               </AppText>
             </TouchableOpacityView>
-            <View style={styles.bottomView}>
+            <TouchableOpacity style={styles.bottomView} onPress={() => Linking.openURL('whatsapp://app')}>
               <AppText weight={INTER_REGULAR} color={TEXTGREY}>
                 Need help?
               </AppText>
@@ -252,14 +277,14 @@ const Login = () => {
                 resizeMode="contain"
                 style={{ width: 20, height: 20, marginLeft: 6 }}
               />
-            </View>
+            </TouchableOpacity>
           </View>
         </ImageBackground>
       </KeyBoardAware>
       <RBSheet
         ref={refRBSheetLogin}
         closeOnDragDown={true}
-        height={380}
+        height={420}
         customStyles={{
           container: {
             backgroundColor: colors.white,
@@ -344,7 +369,7 @@ const Login = () => {
       <RBSheet
         ref={refRBSheetPassword}
         closeOnDragDown={true}
-        height={400}
+        height={450}
         customStyles={{
           container: {
             backgroundColor: colors.white,
@@ -357,8 +382,9 @@ const Login = () => {
           },
         }}
       >
-        <ResetPassword onCloseResetPass={handleCloseResetPass} signId={phoneNumber} otp={otp} setIsForgot={setIsForgot}/>
+        <ResetPassword onCloseResetPass={handleCloseResetPass} signId={phoneNumber} otp={otp} setIsForgot={setIsForgot} setIsOpen={setIsOpen}/>
       </RBSheet>
+      <CustomModal isOpen={isOpen} setIsOpen={setIsOpen} desc={'Your password has been successfully changed.'} title={'Success'}/>
       <SpinnerSecond loading={loading} />
     </AppSafeAreaView>
   );

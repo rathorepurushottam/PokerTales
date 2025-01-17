@@ -1,8 +1,8 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Dispatch } from 'redux';
-import { appOperation } from '../appOperation';
-import { logError, toastAlert } from '../helper/utility';
-import { FCM_TOKEN_KEY, USER_TOKEN_KEY } from '../libs/constant';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Dispatch } from "redux";
+import { appOperation } from "../appOperation";
+import { logError, toastAlert } from "../helper/utility";
+import { FCM_TOKEN_KEY, USER_TOKEN_KEY } from "../libs/constant";
 // import NavigationService from '../navigation/NavigationService';
 // import {
 //   AUTHSTACK,
@@ -11,13 +11,15 @@ import { FCM_TOKEN_KEY, USER_TOKEN_KEY } from '../libs/constant';
 //   MYBATTLEOTP,
 //   OTP,
 // } from '../navigation/routes';
-import { setLoading } from '../slices/authSlice';
-import { BOTTOM_NAVIGATION_STACK } from '../navigation/routes';
-import NavigationService from '../navigation/NavigationService';
+import { setLoading } from "../slices/authSlice";
+import { BOTTOM_NAVIGATION_STACK } from "../navigation/routes";
+import NavigationService from "../navigation/NavigationService";
+import { Vibration } from "react-native";
+import { getUserProfile } from "./profileAction";
 // import { setUserData, setWalletCreate } from '../slices/profileSlice';
 // import { getUserProfile } from './profileAction';
 //done
-export const userLogin = data => async dispatch => {
+export const userLogin = (data) => async (dispatch) => {
   try {
     dispatch(setLoading(true));
     const response = await appOperation.guest.login(data);
@@ -27,7 +29,7 @@ export const userLogin = data => async dispatch => {
       await AsyncStorage.setItem(USER_TOKEN_KEY, response?.data?.accessToken);
       // dispatch(setUserData(response?.data));
       // dispatch(updateDeviceToken());
-    //   NavigationService.navigate(BOTTOM_NAVIGATION_STACK);
+      //   NavigationService.navigate(BOTTOM_NAVIGATION_STACK);
     } else {
       toastAlert.showToastError(response?.message);
     }
@@ -40,98 +42,168 @@ export const userLogin = data => async dispatch => {
 };
 //done
 export const userSignup =
-  (data, onClose = () => {}) =>
-    async dispatch => {
-      try {
-        dispatch(setLoading(true));
-        const response = await appOperation.guest.register(data);
-        console.log(response, "response");
-        if (response?.success) {
-        //   NavigationService.navigate(MYBATTLEOTP, { data: data, id: 'register', permissionSave: permissionSave });
-        toastAlert.showToastError(response?.message);
+  (data, onClose = () => {}, setError = () => {}) =>
+  async (dispatch) => {
+    try {
+      dispatch(setLoading(true));
+      const response = await appOperation.guest.register(data);
+      console.log(response, "response");
+      if (response?.success) {
+        setError("");
+        // toastAlert.showToastError(response?.message);
         onClose();
-        } else {
-          toastAlert.showToastError(response?.message);
-        }
-        // NavigationService.navigate(OTP)
-      } catch (e) {
-        dispatch(setLoading(false));
-        console.log(e);
-        logError(e);
-        toastAlert.showToastError(e?.message);
-        console.log(e,'eeee')
-      } finally {
-        dispatch(setLoading(false));
+      } else {
+        setError(response?.message);
+        // toastAlert.showToastError(response?.message);
       }
-    };
+    } catch (e) {
+      dispatch(setLoading(false));
+      console.log(e);
+      setError(e?.message);
+      logError(e);
+      toastAlert.showToastError(e?.message);
+      console.log(e, "eeee");
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
 //done
 export const otpVerification =
-  (data, onCloseOtp = () => {}) =>
-    async dispatch => {
-      try {
-        dispatch(setLoading(true));
-        const response = await appOperation.guest.otp_verification(data);
-          console.log(response, "response");
-        if (response?.success) {
-          // appOperation.setCustomerToken(response?.data?.accessToken);
-          // await AsyncStorage.setItem(USER_TOKEN_KEY, response?.data?.accessToken);
-          // dispatch(setUserData(response?.data?._id));
-          // dispatch(updateDeviceToken());
-          // dispatch(getUserProfile(true, false));
-          NavigationService.navigate(BOTTOM_NAVIGATION_STACK);
-          toastAlert.showToastError(response?.message);
-          onCloseOtp();
-        } else {
-          toastAlert.showToastError(response?.message);
-        }
-        // if (response?.success) {
-        //   isAlert
-        //     ? toastAlert.showToastError(response?.message)
-        //     : NavigationService.navigate('Home' ,{data: data, id: 'register'})
-        // } else {
-        //   toastAlert.showToastError(response?.message);
-        // }
-      } catch (e) {
-        dispatch(setLoading(false));
-        logError(e);
-        toastAlert.showToastError(e?.message);
-      } finally {
-        dispatch(setLoading(false));
+  (data, onCloseOtp = () => {}, setError) =>
+  async (dispatch) => {
+    try {
+      dispatch(setLoading(true));
+      const response = await appOperation.guest.otp_verification(data);
+      console.log(response, "response");
+      if (response?.success) {
+        setError("");
+
+        dispatch(getUserProfile());
+        // toastAlert.showToastError(response?.message);
+        onCloseOtp();
+      } else {
+        Vibration.vibrate(300);
+        // toastAlert.showToastError(response?.message);
+        setError(response?.message);
       }
-    };
+    } catch (e) {
+      Vibration.vibrate(300);
+      dispatch(setLoading(false));
+      logError(e);
+      // toastAlert.showToastError(e?.message);
+      setError(e?.message);
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
+
+export const phoneOtpVerification =
+  (
+    data,
+    onCloseOtp = () => {},
+    setError = () => {},
+    isForgot,
+    onResetPassword = () => {}
+  ) =>
+  async (dispatch) => {
+    let isNavigate = true;
+    try {
+      dispatch(setLoading(true));
+      const response = await appOperation.customer.phone_otp_verify(data);
+      console.log(response, "response");
+      if (response?.success) {
+        setError("");
+
+        // toastAlert.showToastError(response?.message);
+        onCloseOtp();
+        if (isForgot) {
+          onResetPassword();
+        } else {
+          dispatch(getUserProfile(isNavigate));
+        }
+      } else {
+        Vibration.vibrate(300);
+        // toastAlert.showToastError(response?.message);
+        setError(response?.message);
+      }
+    } catch (e) {
+      Vibration.vibrate(300);
+      dispatch(setLoading(false));
+      logError(e);
+      // toastAlert.showToastError(e?.message);
+      setError(e?.message);
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
+
+export const emailOtpVerification =
+  (data, onCloseOtp = () => {}, setError) =>
+  async (dispatch) => {
+    try {
+      dispatch(setLoading(true));
+      const response = await appOperation.customer.email_otp_verify(data);
+      console.log(response, "response");
+      if (response?.success) {
+        let isNavigate = true;
+        setError("");
+        dispatch(getUserProfile(isNavigate));
+        toastAlert.showToastError(response?.message);
+        onCloseOtp();
+      } else {
+        Vibration.vibrate(300);
+        toastAlert.showToastError(response?.message);
+        setError(response?.message);
+      }
+    } catch (e) {
+      Vibration.vibrate(300);
+      dispatch(setLoading(false));
+      logError(e);
+      // toastAlert.showToastError(e?.message);
+      setError(e?.message);
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
 
 //done
 export const loginUsingPassword =
-  (data, onCloseLogin) =>
-  async (dispatch) => {
+  (data, onCloseLogin, setError) => async (dispatch) => {
     try {
       dispatch(setLoading(true));
       const response = await appOperation.guest.loginUPasswor(data);
       if (response?.success) {
-         toastAlert.showToastError(response?.message)
-         onCloseLogin();
-         NavigationService.navigate(BOTTOM_NAVIGATION_STACK);
+        //  toastAlert.showToastError(response?.message)
+        await onCloseLogin();
+        setError("");
+        dispatch(getUserProfile());
+        //  NavigationService.navigate(BOTTOM_NAVIGATION_STACK);
       } else {
-        toastAlert.showToastError(response?.message);
+        Vibration.vibrate(300);
+        // toastAlert.showToastError(response?.message);
+        setError(response?.message);
       }
     } catch (e) {
+      Vibration.vibrate(300);
       dispatch(setLoading(false));
       logError(e);
-      toastAlert.showToastError(e?.message);
+      setError(e?.message);
+      // toastAlert.showToastError(e?.message);
     } finally {
       dispatch(setLoading(false));
     }
   };
 
 export const forgotPassword =
-  (data, onCloseForgot = () => {}) =>
+  (data, onCloseForgot = () => {}, setIsOpen = () => {}) =>
   async (dispatch) => {
     try {
       dispatch(setLoading(true));
       const response = await appOperation.guest.forgot_password(data);
       if (response?.success) {
-        toastAlert.showToastError(response?.message)
+        // toastAlert.showToastError(response?.message);
         onCloseForgot();
+        setIsOpen(true);
       } else {
         toastAlert.showToastError(response?.message);
       }
@@ -145,27 +217,33 @@ export const forgotPassword =
   };
 
 //done
-export const valideReferCode = (data, onClose = () => {}, setReferCode) => async (dispatch) => {
-  try {
-    dispatch(setLoading(true));
-    const response = await appOperation.guest.refer_code(data);
-    if (response?.success) {
-      toastAlert.showToastError(response?.message);
-      onClose();
-    } else {
-      toastAlert.showToastError(response?.message);
-      setReferCode('')
+export const valideReferCode =
+  (data, onClose = () => {}, setReferCode, setError = () => {}) =>
+  async (dispatch) => {
+    try {
+      dispatch(setLoading(true));
+      const response = await appOperation.guest.refer_code(data);
+      if (response?.success) {
+        setError("");
+        toastAlert.showToastError(response?.message);
+        onClose();
+      } else {
+        // toastAlert.showToastError(response?.message);
+        setError(response?.message);
+        setReferCode("");
+      }
+    } catch (e) {
+      dispatch(setLoading(false));
+      setError(e?.message);
+      logError(e);
+      setReferCode("");
+      toastAlert.showToastError(e?.message);
+    } finally {
+      dispatch(setLoading(false));
     }
-  } catch (e) {
-    dispatch(setLoading(false));
-    logError(e);
-    toastAlert.showToastError(e?.message);
-  } finally {
-    dispatch(setLoading(false));
-  }
-};
+  };
 
-export const resetSignUpOtp = id => async (dispatch: any) => {
+export const resetSignUpOtp = (id) => async (dispatch) => {
   try {
     dispatch(setLoading(true));
     const response = await appOperation.guest.resend_otp(id);

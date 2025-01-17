@@ -1,4 +1,4 @@
-import { ToastAndroid } from "react-native";
+import { Share, ToastAndroid } from "react-native";
 import { interBold } from "../theme/typography";
 
 export const BASE_URL = 'https://api.pokertales.com/';
@@ -47,6 +47,20 @@ export const toastAlert = {
     return expression.test(num);
   };
 
+  export const validateIfsc = (num) => {
+    const expression =
+      /^[A-Z]{4}0[A-Z0-9]{6}$/i;
+  
+    return expression.test(num);
+  };
+
+  export const validateUpiId = (num) => {
+    const expression =
+      /^[0-9A-Za-z.-]{2,256}@[A-Za-z]{2,64}$/i;
+  
+    return expression.test(num);
+  };
+
   export const validatePassword = (value) => {
     const expression =
       /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/i;
@@ -56,4 +70,32 @@ export const toastAlert = {
 
   export const logError = error => {
     console.log(error);
+  };
+
+  export function formatNumber(num) {
+    if (num >= 100000) {
+      // Convert to Lakh (L)
+      return (num / 100000)?.toFixed(2)?.replace(/\.00$/, '') + 'L';
+    } else if (num >= 1000) {
+      // Convert to Thousand (K)
+      return (num / 1000)?.toFixed(2)?.replace(/\.00$/, '') + 'K';
+    }
+    return num?.toString(); // Return as is for smaller numbers
+  };
+
+  export const shareToAny = (message) => {
+    const shareOptions = {
+      message: message,
+    };
+    try {
+      Share.share(shareOptions);
+  
+    } catch (error) {
+      console.log(error)
+    }
+  };
+
+  export const shareMessage = code => {
+    let temp = `Join through my referral link, and we’ll both score some awesome rewards! 💰\n\n1. Download the PokerTales app from here: https://pokertales.com/download-apk/${code}\n2. Get ₹25 Bonus Instantly.\n\n Let’s play and have fun!`;
+    return temp;
   };

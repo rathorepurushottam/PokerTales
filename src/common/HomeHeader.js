@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, TouchableOpacity, StatusBar } from "react-native";
+import { View, StyleSheet, TouchableOpacity, StatusBar, Pressable } from "react-native";
 // import { TouchableOpacityView } from './TouchableOpacityView';
 import NavigationService from "../navigation/NavigationService";
 // import {
@@ -14,10 +14,11 @@ import {
 } from "../helper/image";
 import FastImage from "react-native-fast-image";
 import { useSelector } from "react-redux";
-import { IMAGE_BASE_URL } from "../helper/utility";
+import { formatNumber, IMAGE_BASE_URL } from "../helper/utility";
 import LinearGradient from "react-native-linear-gradient";
 import { colors } from "../theme/color";
 import { AppText, BROWNYELLOW, FORTEEN, SIXTEEN, TWELVE } from "./AppText";
+import { BOTTOM_TAB_WALLET_SCREEN } from "../navigation/routes";
 // import { StatusBar } from 'native-base';
 // import {
 //   AppText,
@@ -26,37 +27,40 @@ import { AppText, BROWNYELLOW, FORTEEN, SIXTEEN, TWELVE } from "./AppText";
 //   WHITE,
 // } from './AppText';
 
-const HomeHeader = ({ personClick, walletIcon }) => {
+const HomeHeader = ({ personClick = () => {}, walletIcon, handleAddCash = () => {} }) => {
   const [random, setRandom] = useState("");
   const userData = useSelector((state) => {
     return state.profile.userData;
   });
-  // const { total_balance, cash_bonus, winning_amount } = userData ?? '';
-  // let totalbalance = winning_amount + cash_bonus + total_balance
-  // useEffect(() => {
-  //   setRandom(Math.random())
-  // }, [total_balance])
+  const userWallet = useSelector((state) => {
+    return state.profile.userWallet;
+  });
+
+  const { bonus, depositBalance, winningAmount } =
+    userWallet ?? "";
+
+    let totalBalance = bonus + depositBalance + winningAmount;
   return (
     <>
-      <StatusBar
-        backgroundColor={"transparent"}
+      {/* <StatusBar
+        // backgroundColor={"transparent"}
         translucent={true}
         networkActivityIndicatorVisible={true}
-      />
+      /> */}
 
       <LinearGradient
         colors={["#070C19", "#032146"]}
         style={styles.topContainer}
       >
-        <TouchableOpacity
-          style={{ height: 28, width: 28 }}
+        <Pressable
+          style={{ height: 40, width: 40, width: "33.33%",  alignItems: "flex-start", }}
           onPress={personClick}
         >
           <FastImage
             resizeMode="contain"
             source={
-              userData?.logo
-                ? { uri: `${IMAGE_BASE_URL}${userData?.logo}` }
+              userData?.avatar
+                ? { uri: `${IMAGE_BASE_URL}${userData?.avatar}` }
                 : userIcon
             }
             style={styles.personImage}
@@ -68,33 +72,38 @@ const HomeHeader = ({ personClick, walletIcon }) => {
               style={{ height: 8, width: 8 }}
             />
           </View>
-        </TouchableOpacity>
+        </Pressable>
+        <View style={{width: "33.33%"}}>
         <FastImage
           source={headerLogo}
           style={styles.combineIcon}
           resizeMode="contain"
         />
-        <View style={{ flexDirection: "row", alignItems: "center", marginTop: 10 }}>
+        </View>
+        <View style={{flexDirection: "row", justifyContent: "space-between", width: "33.33%", gap: 12}}>
+        <TouchableOpacity style={{ flexDirection: "row", alignItems: "center", marginTop: 10, justifyContent: "space-between", gap: 5, width: "50%", }} onPress={() => NavigationService.navigate(BOTTOM_TAB_WALLET_SCREEN)}>
           <FastImage
             source={cashierIcon}
             resizeMode="contain"
-            style={{ width: 12, height: 12, marginRight: 5 }}
+            style={{ width: 12, height: 12 }}
           />
           <AppText color={BROWNYELLOW} type={TWELVE}>
-            ₹ 150
+          ₹{formatNumber(totalBalance?.toFixed(2))}
           </AppText>
-        </View>
-        <View
+        </TouchableOpacity>
+        <Pressable
           style={{
             flexDirection: "row",
             alignItems: "center",
             backgroundColor: "#309B36",
-            width: 60,
-            height: 25,
+            width: "50%",
+            padding: 4,
+            // height: 25,
             justifyContent: "center",
             borderRadius: 5,
             marginTop: 10
           }}
+          onPress={handleAddCash}
         >
           {/* <AppText style={{marginRight: 5, marginBottom: 3}} type={SIXTEEN}>+</AppText> */}
           <FastImage
@@ -103,7 +112,10 @@ const HomeHeader = ({ personClick, walletIcon }) => {
             resizeMode="contain"
           />
           <AppText type={FORTEEN}>Cash</AppText>
+        </Pressable>
         </View>
+       
+        
       </LinearGradient>
     </>
   );
@@ -114,7 +126,7 @@ const styles = StyleSheet.create({
   topContainer: {
     height: 70,
     width: "100%",
-    paddingHorizontal: 10,
+    paddingHorizontal: 20,
     flexDirection: "row",
     alignItems: "center",
     marginTop: 30,
@@ -124,15 +136,15 @@ const styles = StyleSheet.create({
     height: 40,
     width: 40,
     borderRadius: 100,
-    marginLeft: 20,
+    // marginLeft: 20,
     borderWidth: 1,
     borderColor: colors.brownYellow,
   },
   combineIcon: {
     height: 32,
     width: 91,
-    marginLeft: 80,
-    marginRight: 20,
+    // marginLeft: 60,
+    // marginRight: 20,
     marginTop: 10
   },
   notificationIcon: {
@@ -160,7 +172,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     alignSelf: "flex-end",
     top: 26,
-    left: 45,
+    left: 25,
     backgroundColor: colors.white,
     borderRadius: 10,
     borderWidth: 1,

@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import PrimaryButton from "./PrimaryButton";
-import { AppText, BLUE, INTER_MEDIUM, INTER_SEMI_BOLD, TWENTY } from "./AppText";
+import { AppText, BLUE, INTER_MEDIUM, INTER_SEMI_BOLD, RED, TWELVE, TWENTY } from "./AppText";
 import InputBox from "./InputBox";
 import { useDispatch, useSelector } from "react-redux";
 import { valideReferCode } from "../actions/authActions";
 import { SpinnerSecond } from "./SnipperSecond";
 import { universalPaddingHorizontal } from "../theme/dimens";
+import { colors } from "../theme/color";
 
 const ReferCode = ({onCloseRefer, referCode, setReferCode}) => {
   const dispatch = useDispatch();
@@ -14,13 +15,14 @@ const ReferCode = ({onCloseRefer, referCode, setReferCode}) => {
     return state.auth.isLoading;
   });
   const [signFocus, setSignFocus] = useState(false);
+  const [error, setError] = useState('');
 
 
   const handleReferCode = () => {
     let data = {
       refCode:  referCode
     };
-    dispatch(valideReferCode(data, onCloseRefer, setReferCode))
+    dispatch(valideReferCode(data, onCloseRefer, setReferCode, setError))
   }
 
     return (
@@ -50,7 +52,8 @@ const ReferCode = ({onCloseRefer, referCode, setReferCode}) => {
             placeholderTextColor={"#00000066"}
             textInputStyle={{
               borderWidth: 1,
-              borderColor: signFocus ? "#1251AE" : "#E4E4E4",
+              borderColor: error ? colors.lightRed :  signFocus ? "#1251AE" : "#E4E4E4",
+              // borderColor: signFocus ? "#1251AE" : !error ? "#E4E4E4" : colors.lightRed,
               borderRadius: 12,
               backgroundColor: "#F5F5F5",
               height: 55,
@@ -60,13 +63,22 @@ const ReferCode = ({onCloseRefer, referCode, setReferCode}) => {
             onChange={(value) => setReferCode(value)}
             onFocus={() => setSignFocus(true)}
             onBlur={() => setSignFocus(false)}
+            cursorColor={colors.black}
           />
+          {error && <AppText type={TWELVE}
+        color={RED}
+        style={{
+          marginTop: 10,
+          paddingHorizontal: universalPaddingHorizontal,
+          // textAlign: "center"
+        }}
+        weight={INTER_SEMI_BOLD}>{error}</AppText>}
           
           <PrimaryButton
             title={"Apply"}
             weight={INTER_MEDIUM}
             disabled={!referCode}
-            buttonStyle={{ marginTop: 40, paddingHorizontal: universalPaddingHorizontal }}
+            buttonStyle={{ marginTop: 20, paddingHorizontal: universalPaddingHorizontal }}
             onPress={handleReferCode}
           />
           <SpinnerSecond loading={loading} />

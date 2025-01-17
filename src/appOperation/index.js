@@ -53,7 +53,11 @@ export class AppOperation {
   }
 
   send(url, method, params, data, type) {
-    let uri = `${this.base_url}${this.root_path}${url}`;
+    let uri;
+    let uri1 = `${this.base_url}${this.root_path}${url}`;
+    let uri2 = `https://sandbox.cashfree.com/${url}`;
+    {data?.payment_session_id ? uri = uri2 : uri = uri1}
+    
 
     if (params) {
       let separator = '?';
@@ -72,10 +76,10 @@ export class AppOperation {
     }
 
     const headers = {
-      'Content-Type': 'application/json',
+      'Content-Type': data instanceof FormData ? 'multipart/form-data' : 'application/json',
     };
 
-    if (this.customerToken && type === CUSTOMER_TYPE) {
+    if (this.customerToken && type === CUSTOMER_TYPE && uri?.includes('/payment/')) {
       headers['Authorization'] = `${this.customerToken}`;
     }
 

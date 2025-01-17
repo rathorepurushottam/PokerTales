@@ -11,7 +11,29 @@ export const initialState = {
   contestTransactions: [],
   withdrawalsTransactions: [],
   walletCreateData: undefined,
-  SaveActivite: undefined
+  SaveActivite: undefined,
+  initGame: undefined,
+  userWallet: undefined,
+  paymentAuthToken: undefined,
+  paymentDetails: undefined,
+  paymentStatus: undefined,
+  paymentSandBoxStatus: undefined,
+  avatarList: [],
+  remainingCashLimit: undefined,
+  paymentInit: undefined,
+  depositOffers: [],
+  sanboxLinks: [],
+  paymentType: undefined,
+  userUPI: [],
+  userBank: [],
+  despositTransactions: [],
+  lobbyTransactions: [],
+  withdrawTransactions: [],
+  tdsTransaction: [],
+  gstTransaction: [],
+  withdrawResponse: {},
+  remainingInstantWithdraw: undefined,
+  withdrawalFee: undefined,
 };
 export const profileSlice = createSlice({
   name: 'profile',
@@ -50,6 +72,72 @@ export const profileSlice = createSlice({
     setPanDetails: (state, { payload }) => {
       state.panDetails = payload;
     },
+    setInitGame: (state, { payload }) => {
+      state.initGame = payload;
+    },
+    setUserWallet: (state, { payload }) => {
+      state.userWallet = payload;
+    },
+    setPaymentAuthToken: (state, {payload}) => {
+      state.paymentAuthToken = payload
+    },
+    setPaymentInit: (state, {payload}) => {
+      state.paymentInit = payload
+    },
+    setPaymentDetails: (state, {payload}) => {
+      state.paymentDetails = payload
+    },
+    setPaymentStatus: (state, {payload}) => {
+      state.paymentStatus = payload
+    },
+    setAvatarList: (state, {payload}) => {
+      state.avatarList = payload
+    },
+    setRemainingCashLimit: (state, {payload}) => {
+      state.remainingCashLimit = payload
+    },
+    setDepositOffers: (state, {payload}) => {
+      state.depositOffers = payload
+    },
+    setSandboxLink: (state, {payload}) => {
+      state.sanboxLinks = payload
+    },
+    setPaymentSandBoxStatus: (state, {payload}) => {
+      state.paymentSandBoxStatus = payload
+    },
+    setPaymentType: (state, {payload}) => {
+      state.paymentType = payload
+    },
+    setUserUPI: (state, {payload}) => {
+      state.userUPI = payload
+    },
+    setUserBank: (state, {payload}) => {
+      state.userBank = payload
+    },
+    setDepositTransactions: (state, {payload}) => {
+      state.despositTransactions = payload
+    },
+    setLobbyTransactions: (state, {payload}) => {
+      state.lobbyTransactions = payload;
+    },
+    setWithdrawTransactions: (state, {payload}) => {
+      state.withdrawTransactions = payload;
+    },
+    setTdsTransactions: (state, {payload}) => {
+      state.tdsTransaction = payload;
+    },
+    setGstTransaction: (state, {payload}) => {
+      state.gstTransaction = payload;
+    },
+    setWithdrawResponse: (state, {payload}) => {
+      state.withdrawResponse = payload;
+    },
+    setRemainingInstantWithdraw: (state, {payload}) => {
+      state.remainingInstantWithdraw = payload;
+    },
+    setWithdrawalFee: (state, {payload}) => {
+      state.withdrawalFee = payload;
+    },
   },
 });
 
@@ -64,6 +152,28 @@ export const {
   setWalletCreate,
   setAadharDetails,
   setPanDetails,
+  setInitGame,
+  setUserWallet,
+  setPaymentAuthToken,
+  setPaymentDetails,
+  setPaymentStatus,
+  setAvatarList,
+  setRemainingCashLimit,
+  setDepositOffers,
+  setPaymentInit,
+  setSandboxLink,
+  setPaymentSandBoxStatus,
+  setPaymentType,
+  setUserUPI,
+  setUserBank,
+  setDepositTransactions,
+  setLobbyTransactions,
+  setWithdrawTransactions,
+  setTdsTransactions,
+  setGstTransaction,
+  setWithdrawResponse,
+  setRemainingInstantWithdraw,
+  setWithdrawalFee
 } = profileSlice.actions;
 
 export default profileSlice.reducer;

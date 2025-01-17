@@ -6,7 +6,9 @@ import {
   BLUE,
   INTER_MEDIUM,
   INTER_SEMI_BOLD,
+  RED,
   SIXTEEN,
+  TWELVE,
   TWENTY,
 } from "./AppText";
 import InputBox from "./InputBox";
@@ -27,22 +29,26 @@ const AadharNumber = ({onKycOtp, setAadharNumber, setRefId}) => {
   });
   const [signId, setSignId] = useState("");
   const [signFocus, setSignFocus] = useState(false);
+  const [error, setError] = useState('');
   
 
   const handleVerifyAadhNumber = () => {
     if (!signId) {
-      toastAlert.showToastError("Please enter Aadhar Number");
+      // toastAlert.showToastError("Please enter Aadhar Number");
+      setError('Please enter Aadhar Number');
       return;
     }
       if(!validateAadharNumber(signId)) {
-        toastAlert.showToastError('Please Enter Correct Aadhar Number');
+        // toastAlert.showToastError('Please Enter Correct Aadhar Number');
+        setSignFocus(false);
+        setError('Please Enter Correct Aadhar Number');
           return;
       };
     let data = {
         aadharNumber: signId,
     };
     setAadharNumber(signId);
-    dispatch(getAadharOtp(data, setRefId, onKycOtp));
+    dispatch(getAadharOtp(data, setRefId, onKycOtp, setSignFocus, setError));
     
 
   };
@@ -71,7 +77,7 @@ const AadharNumber = ({onKycOtp, setAadharNumber, setRefId}) => {
         placeholderTextColor={"#00000066"}
         textInputStyle={{
           borderWidth: 1,
-          borderColor: signFocus ? "#1251AE" : "#E4E4E4",
+          borderColor: signFocus ? "#1251AE" : !error ? "#E4E4E4" : colors.lightRed,
           borderRadius: 12,
           backgroundColor: "#F5F5F5",
           height: 55,
@@ -85,13 +91,28 @@ const AadharNumber = ({onKycOtp, setAadharNumber, setRefId}) => {
         value={signId}
         label={'Aadhar Number'}
         labelStyle={{color: "#00000066"}}
+        cursorColor={colors.black}
       />
+      {error && (
+        <AppText
+          type={TWELVE}
+          color={RED}
+          style={{
+            marginVertical: 5,
+            paddingHorizontal: universalPaddingHorizontal,
+            // textAlign: "center",
+          }}
+          weight={INTER_SEMI_BOLD}
+        >
+          {error}
+        </AppText>
+      )}
 
       <PrimaryButton
         title={"Send OTP"}
         weight={INTER_MEDIUM}
-        disabled={!signId}
-        buttonStyle={{ marginTop: 40 }}
+        disabled={signId?.length !== 12}
+        buttonStyle={{ marginTop: 20 }}
         onPress={handleVerifyAadhNumber}
       />
       </View>

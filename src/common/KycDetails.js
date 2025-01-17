@@ -40,8 +40,6 @@ const KycDetails = ({ onCloseAadharDetails, onChangeAddhar, aadharNumber }) => {
   };
 
 
-  console.log(kycDetails,"kycDetails");
-
   return (
     <View styles={styles.mainView}>
       <View style={styles.sheetHeader}>

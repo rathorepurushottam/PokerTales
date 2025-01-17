@@ -7,8 +7,11 @@ import {
   BOTTOMTEXT,
   DISABLETEXT,
   FORTEEN,
+  INTER_BOLD,
   INTER_MEDIUM,
   INTER_SEMI_BOLD,
+  RED,
+  TWELVE,
   TWENTY,
 } from "./AppText";
 import { colors } from "../theme/color";
@@ -20,6 +23,7 @@ import { otpVerification, userSignup } from "../actions/authActions";
 import { getAadharOtp, verifyKycOtp } from "../actions/profileAction";
 import { SpinnerSecond } from "./SnipperSecond";
 import { universalPaddingHorizontal } from "../theme/dimens";
+import { OtpInput } from "react-native-otp-entry";
 
 const KycOTP = ({ aadharNumber, setRefId, onCloseOtp, refId}) => {
   const dispatch = useDispatch();
@@ -33,53 +37,31 @@ const KycOTP = ({ aadharNumber, setRefId, onCloseOtp, refId}) => {
   const autoSubmitOtpTimerIntervalCallbackReference = useRef();
   const RESEND_OTP_TIME_LIMIT = 60; // 30 secs
 
-  let resendOtpTimerInterval = undefined;
-  // const [code, setCode] = useState("");
-
-  useEffect(() => {
-    autoSubmitOtpTimerIntervalCallbackReference.current =
-      autoSubmitOtpTimerIntervalCallback;
-  }, []);
-
-  useEffect(() => {
-    startResendOtpTimer();
-
-    return () => {
-      if (resendOtpTimerInterval) {
-        clearInterval(resendOtpTimerInterval);
-      }
-    };
-  }, [resendButtonDisabledTime]);
-
-  const startResendOtpTimer = () => {
-    if (resendOtpTimerInterval) {
-      clearInterval(resendOtpTimerInterval);
-    }
-    resendOtpTimerInterval = setInterval(() => {
-      if (resendButtonDisabledTime <= 0) {
-        clearInterval(resendOtpTimerInterval);
-      } else {
-        setResendButtonDisabledTime(resendButtonDisabledTime - 1);
-      }
-    }, 1000);
-  };
-
-  const autoSubmitOtpTimerIntervalCallback = () => {};
+  const [timer, setTimer] = useState(30); // Timer starts at 30 seconds
+  const [isButtonDisabled, setIsButtonDisabled] = useState(true);
+  const [error, setError] = useState("");
 
   const handleResendOTP = () => {
-    setResendButtonDisabledTime(RESEND_OTP_TIME_LIMIT);
-    startResendOtpTimer();
+    setTimer(30); // Reset the timer
+    setIsButtonDisabled(true);
     let data = {
       aadharNumber: aadharNumber,
     };
-    dispatch(getAadharOtp(data, setRefId));
+    dispatch(getAadharOtp(data, setRefId, setError));
   };
 
-  console.log(aadharNumber, "aadharNumber");
+  useEffect(() => {
+    if (timer > 0) {
+      const interval = setInterval(() => {
+        setTimer((prevTimer) => prevTimer - 1);
+      }, 1000);
+      return () => clearInterval(interval); // Clear interval on component unmount
+    } else {
+      setIsButtonDisabled(false);
+    }
+  }, [timer]);
 
-  // const handleOtp = () => {
-    
-  // }
+
   return (
     <View styles={styles.mainView}>
       <View
@@ -106,7 +88,7 @@ const KycOTP = ({ aadharNumber, setRefId, onCloseOtp, refId}) => {
           OTP has sent to Phone Number linked with Aadhar
         </AppText>
       </View>
-      <OTPInputView
+      {/* <OTPInputView
         style={{
           width: "100%",
           alignSelf: "center",
@@ -127,49 +109,105 @@ const KycOTP = ({ aadharNumber, setRefId, onCloseOtp, refId}) => {
                 aadharOtp: code,
                 refId: refId,
               };
-              dispatch(verifyKycOtp(_data , onCloseOtp));
+              dispatch(verifyKycOtp(_data , onCloseOtp, setError));
         
           }
         }}
         placeholderTextColor={colors.black}
-        codeInputFieldStyle={styles.underlineStyleBase}
+        codeInputFieldStyle={!error
+          ? styles.underlineStyleBase
+          : styles.errorUnderlineStyleBase}
         codeInputHighlightStyle={styles.underlineStyleHighLighted}
+      /> */}
+      <OtpInput
+        numberOfDigits={6}
+        focusColor={colors.darkBlue}
+        focusStickBlinkingDuration={500}
+        onTextChange={(text) => setOtp(text)}
+        onFilled={(code) => {
+          console.log(code.length, "code.length")
+          if (code.length === 6) {
+              let _data = {
+                aadharOtp: code,
+                refId: refId,
+              };
+              dispatch(verifyKycOtp(_data , onCloseOtp, setError));
+        
+          }
+        }}
+        autoFocus={true}
+        textInputProps={{
+          accessibilityLabel: "One-Time Password",
+        }}
+        theme={{
+          containerStyle: styles.otpContainer,
+          pinCodeContainerStyle: !error
+            ? styles.underlineStyleBase
+            : styles.errorUnderlineStyleBase,
+          pinCodeTextStyle: styles.pinCodeText,
+          // focusStickStyle: styles.focusStick,
+          focusedPinCodeContainerStyle: error ? styles.errorUnderlineStyleBase : styles.underlineStyleHighLighted,
+        }}
       />
-      <View style={[styles.menuView, { marginTop: 10 }]}>
-        <View
-          style={{ flexDirection: "row", alignItems: "center", padding: 1 }}
+      {!error && (
+        <AppText
+          type={TWELVE}
+          color={RED}
+          style={{
+            marginVertical: 5,
+            paddingHorizontal: universalPaddingHorizontal,
+            // textAlign: "center",
+          }}
+          weight={INTER_SEMI_BOLD}
         >
-          <FastImage
-            source={timerIcon}
-            resizeMode="contain"
-            tintColor={colors.black}
-            style={{ width: 15, height: 15, marginRight: 3 }}
-          />
-          {resendButtonDisabledTime > 0 ? (
+          {error}
+        </AppText>
+      )}
+      <View style={[styles.menuView, { marginTop: 10 }]}>
+      <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            padding: 1,
+            justifyContent: "space-between",
+            width: "100%",
+          }}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            {isButtonDisabled && (
+              <>
+                <FastImage
+                  source={timerIcon}
+                  resizeMode="contain"
+                  tintColor={colors.black}
+                  style={{ width: 15, height: 15, marginRight: 3 }}
+                />
+                <AppText
+                  //  onPress={onResend}
+                  type={FORTEEN}
+                  color={BOTTOMTEXT}
+                  weight={INTER_SEMI_BOLD}
+                >
+                  {`00:${timer}`}
+                </AppText>
+              </>
+            )}
+          </View>
+
+          <TouchableOpacity
+            onPress={handleResendOTP}
+            disabled={isButtonDisabled}
+          >
             <AppText
               //  onPress={onResend}
-
               type={FORTEEN}
-              color={BOTTOMTEXT}
+              color={isButtonDisabled ? DISABLETEXT: BOTTOMTEXT}
               weight={INTER_SEMI_BOLD}
             >
-              Resend OTP in{" "}
-              {resendButtonDisabledTime > 0
-                ? "0:" + resendButtonDisabledTime
-                : "00:00"}
+              Resend OTP
             </AppText>
-          ) : (
-            <TouchableOpacity onPress={handleResendOTP}>
-              <AppText
-                //  onPress={onResend}
-                type={FORTEEN}
-                color={BOTTOMTEXT}
-                weight={INTER_SEMI_BOLD}
-              >
-                Resend OTP
-              </AppText>
-            </TouchableOpacity>
-          )}
+          </TouchableOpacity>
+          {/* <SecondaryButton title={'Resend OTP'}/> */}
         </View>
       </View>
       <SpinnerSecond loading={loading}/>
@@ -183,6 +221,23 @@ const styles = StyleSheet.create({
   mainView: {
     flex: 1,
   },
+  // underlineStyleBase: {
+  //   width: 46,
+  //   height: 40,
+  //   borderRadius: 10,
+  //   backgroundColor: "#F5F5F5",
+  //   color: colors.black,
+  //   borderWidth: 1,
+  //   borderColor: "#E4E4E4",
+  // },
+  // underlineStyleHighLighted: {
+  //   borderColor: colors.darkBlue,
+  // },
+  menuView: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: universalPaddingHorizontal,
+  },
   underlineStyleBase: {
     width: 46,
     height: 40,
@@ -192,12 +247,31 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E4E4E4",
   },
-  underlineStyleHighLighted: {
-    borderColor: colors.darkBlue,
+  errorUnderlineStyleBase: {
+    width: 46,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: "#F5F5F5",
+    color: colors.black,
+    borderWidth: 1,
+    borderColor: colors.lightRed,
   },
-  menuView: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  underlineStyleHighLighted: {
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.darkBlue,
+    textAlign: "center",
+  },
+  otpContainer: {
+    width: "100%",
+    alignSelf: "center",
+    marginTop: 20,
+    height: 50,
     paddingHorizontal: universalPaddingHorizontal,
+  },
+  pinCodeText: {
+    fontFamily: INTER_BOLD,
+    color: colors.darkBlue,
+    fontSize: 18,
   },
 });

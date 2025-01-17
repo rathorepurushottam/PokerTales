@@ -1,7 +1,7 @@
 import { View, TextInput } from 'react-native';
 import React from 'react';
 import styles from './styles';
-import { AppText, FORTEEN, INTER_MEDIUM, SIXTEEN, TWELVE, TWENTY_FIVE } from '../AppText';
+import { AppText, BLACK, EIGHTEEN, FORTEEN, INTER_BOLD, INTER_MEDIUM, INTER_SEMI_BOLD, SIXTEEN, TWELVE, TWENTY, TWENTY_FIVE } from '../AppText';
 import FastImage from 'react-native-fast-image';
 import { eye_close, eye_open } from '../../helper/image';
 import { TouchableOpacityView } from '../TouchableOpacityView';
@@ -31,6 +31,13 @@ const InputBox = ({
     onFocus,
     onBlur,
     containerStyle,
+    cursorColor,
+    autoCapitalize,
+    amount,
+    offers,
+    codeApplied,
+    onCodeApplied,
+    onSubmit,
     ...props
 }) => {
     return (
@@ -67,6 +74,14 @@ const InputBox = ({
                     }}>
                         <AppText type={SIXTEEN}>+91</AppText>
                     </View>)}
+                    {amount && (<View style={{
+                        height: 29 ,
+                        width: 10,
+                        marginLeft: 15,
+                      
+                    }}>
+                        <AppText type={TWENTY} color={BLACK} weight={INTER_BOLD}>₹</AppText>
+                    </View>)}
 
                     <TextInput
                         {...props}
@@ -89,18 +104,25 @@ const InputBox = ({
                         editable={editable}
                         onFocus={onFocus}
                         onBlur={onBlur}
+                        onSubmitEditing={onSubmit}
+                        cursorColor={cursorColor}
+                        autoCapitalize={autoCapitalize}
                     />
                     {isPassword && (
                         <TouchableOpacityView
                             style={styles.toggleButton}
                             onPress={onToggle}>
                             <FastImage
-                                source={secureTextEntry ? eye_open : eye_close}
+                                source={secureTextEntry ? eye_close : eye_open}
                                 style={styles.eyeIcon}
                                 resizeMode="contain"
                             />
                         </TouchableOpacityView>
                     )}
+                    {offers && 
+                    <TouchableOpacityView style={{marginRight: 20}} onPress={onCodeApplied}>
+                        <AppText type={FORTEEN} weight={INTER_SEMI_BOLD} style={{color: value ? "#01B9F5" : colors.disableText}}>{'Apply'}</AppText>
+                        </TouchableOpacityView>}
                 </View>
             </View>
         </View>

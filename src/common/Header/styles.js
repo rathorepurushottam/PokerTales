@@ -1,7 +1,7 @@
-import {StyleSheet} from 'react-native';
+import { StyleSheet } from "react-native";
 
-import {Logo, Screen, universalPaddingHorizontal} from '../../theme/dimens';
-import { colors } from '../../theme/color';
+import { Logo, Screen, universalPaddingHorizontal } from "../../theme/dimens";
+import { colors } from "../../theme/color";
 
 const styles = StyleSheet.create({
   container: {
@@ -11,49 +11,45 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bottomContainer: {
-    flexDirection: 'row',
-    alignSelf: 'flex-start',
+    flexDirection: "row",
+    alignSelf: "flex-start",
     padding: universalPaddingHorizontal,
-    position: 'absolute',
+    position: "absolute",
   },
   header: {
-    flexDirection: 'row',
-    height: 70,
+    flexDirection: "row",
+    height: 45,
     width: "100%",
-    paddingHorizontal: 10,
-    marginTop: 30,
-    // paddingHorizontal: universalPaddingHorizontal,
+    // paddingVertical: 5,
+    paddingHorizontal: 20,
+    justifyContent: "space-between",
     alignItems: "center",
   },
   logo: {
-    alignSelf: 'center',
+    alignSelf: "center",
     marginTop: Screen.Height / 16,
     height: Logo.Height,
     width: Logo.Width,
   },
-  title: {
-    marginLeft: 80,
-    marginTop:2,
-    // alignSelf: "center"
-  },
+  title: {},
+  balance: {},
   arrow: {
     height: 18,
     width: 18,
   },
   arrowIcon: {
-    height: 13,
-    width: 13,
+    height: 24,
+    width: 24,
   },
-  arrowview:{
-    height:28,
-    width:28,
-    backgroundColor:"transparent",
-    borderWidth:1,
-    borderColor:colors.bottomBackgroundColor,
-    alignItems:"center",
-    justifyContent:"center",
-    borderRadius:15
-  }
+  walletIcon: {
+    height: 18,
+    width: 18,
+  },
+  arrowview: {
+    width: "33.33%",
+    justifyContent: "center",
+    alignItems: "flex-start",
+  },
 });
 
 export default styles;

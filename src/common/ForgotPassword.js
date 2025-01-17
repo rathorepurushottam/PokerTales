@@ -6,14 +6,21 @@ import {
   BLUE,
   INTER_MEDIUM,
   INTER_SEMI_BOLD,
+  RED,
+  TWELVE,
   TWENTY,
 } from "./AppText";
 import InputBox from "./InputBox";
-import { toastAlert, validateEmail, validatePhoneNumber } from "../helper/utility";
+import {
+  toastAlert,
+  validateEmail,
+  validatePhoneNumber,
+} from "../helper/utility";
 import { forgotPassword, userSignup } from "../actions/authActions";
 import { useDispatch, useSelector } from "react-redux";
 import { SpinnerSecond } from "./SnipperSecond";
 import { universalPaddingHorizontal } from "../theme/dimens";
+import { colors } from "../theme/color";
 
 const ForgotPassword = ({ onCloseForgot, setPhoneNumber }) => {
   const dispatch = useDispatch();
@@ -22,32 +29,34 @@ const ForgotPassword = ({ onCloseForgot, setPhoneNumber }) => {
   });
   const [signId, setSignId] = useState("");
   const [signFocus, setSignFocus] = useState(false);
+  const [error, setError] = useState("");
 
   const handleForgotPassword = () => {
     if (!signId) {
       toastAlert.showToastError("Please enter Email or Mobile Number");
+      setError("Please enter Email or Mobile Number");
       return;
     }
 
-    if(signId.includes('@')) {
-      if(!validateEmail(signId)) {
-        toastAlert.showToastError('Please Enter Correct Mobile Number');
-          return;
-      };
+    if (signId.includes("@")) {
+      if (!validateEmail(signId)) {
+        toastAlert.showToastError("Please Enter Correct Email Id");
+        setError("Please Enter Correct Email Id");
+        return;
+      }
     } else if (!validatePhoneNumber(signId)) {
-      toastAlert.showToastError('Please Enter Correct Mobile Number');
+      toastAlert.showToastError("Please Enter Correct Mobile Number");
+      setError("Please Enter Correct Mobile Number");
       return;
     }
-    let number =  signId.includes('@') ? signId : parseInt(signId);
+    let number = signId.includes("@") ? signId : parseInt(signId);
     let data = {
-      
       signId: number,
-      "type": "changePassword"
+      type: "changePassword",
     };
     setPhoneNumber(number);
 
-    dispatch(userSignup(data, onCloseForgot));
-
+    dispatch(userSignup(data, onCloseForgot, setError));
   };
   return (
     <View styles={styles.mainView}>
@@ -65,7 +74,10 @@ const ForgotPassword = ({ onCloseForgot, setPhoneNumber }) => {
       <AppText
         type={TWENTY}
         color={BLUE}
-        style={{ marginVertical: 15, paddingHorizontal: universalPaddingHorizontal, }}
+        style={{
+          marginVertical: 15,
+          paddingHorizontal: universalPaddingHorizontal,
+        }}
         weight={INTER_SEMI_BOLD}
       >
         Forgot Password
@@ -76,23 +88,47 @@ const ForgotPassword = ({ onCloseForgot, setPhoneNumber }) => {
         placeholderTextColor={"#00000066"}
         textInputStyle={{
           borderWidth: 1,
-          borderColor: signFocus ? "#1251AE" : "#E4E4E4",
+          borderColor: error
+            ? colors.lightRed
+            : signFocus
+            ? "#1251AE"
+            : "#E4E4E4",
           borderRadius: 12,
           backgroundColor: "#F5F5F5",
           height: 55,
         }}
-        style={{paddingHorizontal: universalPaddingHorizontal,}}
+        keyboardType={"default"}
+        style={{ paddingHorizontal: universalPaddingHorizontal }}
         onFocus={() => setSignFocus(true)}
         onBlur={() => setSignFocus(false)}
         onChange={(value) => setSignId(value)}
         value={signId}
+        cursorColor={colors.black}
       />
+
+      {error && (
+        <AppText
+          type={TWELVE}
+          color={RED}
+          style={{
+            marginTop: 10,
+            paddingHorizontal: universalPaddingHorizontal,
+            // textAlign: "center",
+          }}
+          weight={INTER_SEMI_BOLD}
+        >
+          {error}
+        </AppText>
+      )}
 
       <PrimaryButton
         title={"Get OTP"}
         weight={INTER_MEDIUM}
         disabled={!signId}
-        buttonStyle={{ marginTop: 40, paddingHorizontal: universalPaddingHorizontal, }}
+        buttonStyle={{
+          marginTop: 20,
+          paddingHorizontal: universalPaddingHorizontal,
+        }}
         onPress={handleForgotPassword}
       />
       <SpinnerSecond loading={loading} />

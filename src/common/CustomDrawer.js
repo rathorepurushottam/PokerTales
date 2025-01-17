@@ -21,6 +21,9 @@ import {
   termsIcon,
   legalityIcon,
   logoutIcon,
+  user,
+  backIcon,
+  userIcon
 } from "../helper/image";
 import { TouchableOpacityView } from "./TouchableOpacityView";
 import { NewColor, colors } from "../theme/color";
@@ -36,6 +39,7 @@ import {
   WHITE,
   INTER_MEDIUM,
   FORTEEN,
+  FIFTEENTH,
 } from "./AppText";
 import Modal from "react-native-modal";
 import NavigationService from "../navigation/NavigationService";
@@ -54,16 +58,20 @@ import { useDispatch, useSelector } from "react-redux";
 import RBSheet from "react-native-raw-bottom-sheet";
 import { universalPaddingHorizontal } from "../theme/dimens";
 import KycOption from "./KycOption";
-import { getKycDetails, userLogOut } from "../actions/profileAction";
+import { getKycDetails, getUserProfile, userLogOut } from "../actions/profileAction";
 import AadharNumber from "./AadharNumber";
 import KycOTP from "./KycOTP";
 import PanNumber from "./PanNumber";
 import { SpinnerSecond } from "./SnipperSecond";
 import KycDetails from "./KycDetails";
-import { toastAlert } from "../helper/utility";
+import { IMAGE_BASE_URL, toastAlert } from "../helper/utility";
 import PanDetails from "./PanDetails";
 import Logout from "./Logout";
-import { SUB_MENU_SCREEN } from "../navigation/routes";
+import { ABOUT_US_SCREEN, EDIT_PROFILE_SCREEN, LEGALITY_SCREEN, PRIVACY_POLICY_SCREEN, SUB_MENU_SCREEN, TERMS_OF_USE_SCREEN } from "../navigation/routes";
+import InviteAndEarn from "./InviteAndEarn";
+import ResponsibleGaming from "./ResponsibleGaming";
+import CustomModal from "./CustomModal";
+import Settings from "./Settings";
 
 // import { getUserProfile } from '../actions/profileAction';
 // import { IMAGE_BASE_URL } from '../helper/utility';
@@ -73,6 +81,11 @@ export const datatwo = [
     FastImage: kycIcon,
     title: "KYC",
   },
+  // {
+  //   id: 2,
+  //   FastImage: user,
+  //   title: "Profile",
+  // },
   {
     id: 3,
     FastImage: resGamingIcon,
@@ -109,12 +122,12 @@ export const datatwo = [
     title: "Terms of use",
   },
   {
-    id: 9,
+    id: 10,
     FastImage: legalityIcon,
     title: "Legality",
   },
   {
-    id: 10,
+    id: 11,
     FastImage: logoutIcon,
     title: "Logout",
   },
@@ -129,9 +142,17 @@ const CustomDrawer = () => {
   const refRBSheetPanNumber = useRef();
   const refRBSheetPanDetails = useRef();
   const refRBSheetLogOut = useRef();
+  const refRBSheetInvite = useRef();
+  const refRBSheetGaming = useRef();
+  const refRBSheetSettings = useRef();
   const kycDetails = useSelector((state) => {
     return state.profile.kycDetails;
   });
+
+  const userData = useSelector((state) => {
+    return state.profile.userData;
+  });
+
   const loading = useSelector((state) => {
     return state.auth.isLoading;
   });
@@ -139,11 +160,20 @@ const CustomDrawer = () => {
   const [refId, setRefId] = useState("");
   const [select, setSelect] = useState("");
   const [random, setRandom] = useState(0);
-  const [mdlVisibile, setMdlVisible] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [desc, setDesc] = useState('');
   const onSubmit = (id, title) => {
     setSelect(id);
     if (id == "1") return refRBSheetKyc?.current?.open();
-    if (id == "10") return refRBSheetLogOut.current.open();
+    if (id == "11") return refRBSheetLogOut.current.open();
+    // if (id == "2") return NavigationService.navigate(EDIT_PROFILE_SCREEN);
+    if (id == "3") return refRBSheetGaming.current.open();
+    if (id == "4") return refRBSheetSettings.current.open();
+    if (id == "7") return NavigationService.navigate(ABOUT_US_SCREEN);
+    if (id == "8") return NavigationService.navigate(PRIVACY_POLICY_SCREEN);
+    if (id == "9") return NavigationService.navigate(TERMS_OF_USE_SCREEN);
+    if (id == "10") return NavigationService.navigate(LEGALITY_SCREEN);
+    if (id == "5") return refRBSheetInvite.current.open();
     NavigationService.navigate(SUB_MENU_SCREEN, {data: title})
   };
 
@@ -151,24 +181,18 @@ const CustomDrawer = () => {
     dispatch(getKycDetails());
   }, []);
 
-  console.log(kycDetails, "kycDetails");
-
   const handleCloseKycOptions = (type) => {
     refRBSheetKyc.current.close();
     if (type === "aadhar") {
       if(kycDetails?.aadharKyc?.aadharStatus === "Approved") {
         toastAlert.showToastError('Aadhar KYC is completed')
-      } else if (kycDetails?.aadharKyc?.aadharStatus === "Pending") {
-        refRBSheetAadharDetails.current.open();
-      } else {
+      }  else {
         refRBSheetAadharNumber.current.open();
       }
       
     } else {
       if(kycDetails?.panKyc?.panStatus === "Approved") {
         toastAlert.showToastError('Pan KYC is completed')
-      } else if (kycDetails?.panKyc?.panStatus === "Pending") {
-        refRBSheetPanDetails.current.open();
       } else {
         refRBSheetPanNumber.current.open();
       }
@@ -212,7 +236,19 @@ const CustomDrawer = () => {
     refRBSheetLogOut.current.close();
   };
 
-  console.log(kycDetails, "kycDetails");
+  const handleCloseInvite = () => {
+    refRBSheetInvite.current.close();
+  };
+
+  const handleCloseGaming = () => {
+    refRBSheetGaming.current.close();
+  };
+
+  const handleCloseSettings = () => {
+    refRBSheetSettings.current.close();
+  };
+
+  // console.log(userData, "userData");
 
   const renderData = ({ item }) => {
     return (
@@ -258,6 +294,50 @@ const CustomDrawer = () => {
         translucent={true}
         networkActivityIndicatorVisible={true}
       />
+        <View style={styles.MyProfileBox}>
+          <TouchableOpacityView style={styles.imageview}>
+            <FastImage
+              source={
+                userData?.avatar
+                  ? { uri: `${IMAGE_BASE_URL}${userData?.avatar}` }
+                  : userIcon
+              }
+              resizeMode="contain"
+              style={styles.usericon}
+            />
+          </TouchableOpacityView>
+          <TouchableOpacityView
+            style={{
+              width: '100%',
+              padding: 5,
+              marginTop: 50,
+              marginLeft: 20 ,
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center"
+            }}
+            onPress={() => {
+              NavigationService.navigate(EDIT_PROFILE_SCREEN);
+            }}
+            >
+            <View>
+              <AppText type={FIFTEENTH} weight={INTER_SEMI_BOLD} color={WHITE}>
+                {userData?.userName}
+              </AppText>
+              <AppText weight={INTER_MEDIUM} color={WHITE}>
+             Profile Information
+              </AppText>
+            </View>
+            <FastImage
+              source={backIcon}
+              resizeMode="contain"
+              style={styles.rightArrow}
+              tintColor={colors.white}
+            />
+              
+
+          </TouchableOpacityView>
+      </View>
       <KeyBoardAware>
         <View style={styles.topviewicons}>
           <FlatList
@@ -265,7 +345,7 @@ const CustomDrawer = () => {
             renderItem={(item) => renderData(item)}
             keyExtractor={(item, index) => index.toString()}
           />
-          <View style={{ marginBottom: 50 }}>
+          <View style={{ marginTop: 20 }}>
             <AppText style={{ color: "#FFFFFFBF", marginLeft: 10 }}>
               Current Version
             </AppText>
@@ -278,7 +358,7 @@ const CustomDrawer = () => {
       <RBSheet
         ref={refRBSheetKyc}
         closeOnDragDown={true}
-        height={480}
+        height={420}
         customStyles={{
           container: {
             backgroundColor: colors.white,
@@ -415,6 +495,64 @@ const CustomDrawer = () => {
       >
         <Logout onCloseLogout={handleCloseLogout}/>
       </RBSheet>
+      <RBSheet
+        ref={refRBSheetInvite}
+        closeOnDragDown={true}
+        height={720}
+        customStyles={{
+          container: {
+            backgroundColor: colors.white,
+            borderTopLeftRadius: 40,
+            borderTopRightRadius: 40,
+            // paddingHorizontal: universalPaddingHorizontal,
+          },
+          draggableIcon: {
+            backgroundColor: "transparent",
+            display: "none",
+          },
+        }}
+      >
+        <InviteAndEarn code={userData?.referralCode} onCloseInvite={handleCloseInvite}/>
+      </RBSheet>
+      <RBSheet
+        ref={refRBSheetGaming}
+        closeOnDragDown={true}
+        height={750}
+        customStyles={{
+          container: {
+            backgroundColor: colors.white,
+            borderTopLeftRadius: 40,
+            borderTopRightRadius: 40,
+            // paddingHorizontal: universalPaddingHorizontal,
+          },
+          draggableIcon: {
+            backgroundColor: "transparent",
+            display: "none",
+          },
+        }}
+      >
+        <ResponsibleGaming setDesc={setDesc} setIsOpen={setIsOpen} onCloseGaming={handleCloseGaming}/>
+      </RBSheet>
+      <RBSheet
+        ref={refRBSheetSettings}
+        closeOnDragDown={true}
+        height={320}
+        customStyles={{
+          container: {
+            backgroundColor: colors.white,
+            borderTopLeftRadius: 40,
+            borderTopRightRadius: 40,
+            // paddingHorizontal: universalPaddingHorizontal,
+          },
+          draggableIcon: {
+            backgroundColor: "transparent",
+            display: "none",
+          },
+        }}
+      >
+        <Settings onClose={handleCloseSettings}/>
+      </RBSheet>
+      <CustomModal isOpen={isOpen} setIsOpen={setIsOpen} desc={desc} title={'Success'}/>
       <SpinnerSecond loading={loading} />
     </AppSafeAreaView>
   );
@@ -422,6 +560,14 @@ const CustomDrawer = () => {
 export default CustomDrawer;
 
 const styles = StyleSheet.create({
+  MyProfileBox: {
+    // height: 160,
+    paddingTop: 10,
+    width: '80%',
+    flexDirection: "row",
+    paddingHorizontal: 15,
+    justifyContent: "space-between"
+  },
   profiletopview: {
     paddingHorizontal: 10,
   },
@@ -446,16 +592,13 @@ const styles = StyleSheet.create({
   rightArrow: {
     height: 15,
     width: 20,
+    transform: [{rotateZ: '180deg'}]
   },
   topviewicons: {
-    flex: 1,
     backgroundColor: "#060E21",
-    // marginTop: 20,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 10,
-    // width: "100%"
-    // marginHorizontal: 20,
   },
   tabsview: {
     alignItems: "center",

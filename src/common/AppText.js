@@ -58,6 +58,7 @@ export const GOLDEN = 'GOLDEN';
 export const DISABLETEXT = "DISABLETEXT";
 export const FOCUSEDTEXT = "FOCUSEDTEXT";
 export const TEXTGREY = "TEXTGREY";
+export const LIGHTGREY = "LIGHTGREY";
 
 
 
@@ -69,6 +70,7 @@ export const EIGHT = 'EIGHT';
 export const THIRTEENTH = 'THIRTEENTH';
 export const FIFTEENTH = 'FIFTEENTH';
 export const THIRTY = 'THIRTY';
+export const WITHDRAWBLUE = "WITHDRAWBLUE";
 
 export const TWENTY_ONE_L = 'TWENTY_ONE_L';
 export const THIRTY_SIX_L = 'THIRTY_SIX_L';
@@ -79,11 +81,13 @@ const AppText = ({
   style,
   color,
   line,
+  onPress,
   ...props
 }) => {
   return (
     <Text
       allowFontScaling={false}
+      onPress={onPress}
       style={StyleSheet.flatten([
         styles.text(type, weight, color, line),
         style,
@@ -239,6 +243,13 @@ const getTextStyle = (
         case TEXTGREY:
         style['color'] = colors.textGrey;
         break;
+        case WITHDRAWBLUE:
+        style['color'] = colors.withdrawBlue;
+        break;
+        case LIGHTGREY:
+        style['color'] = colors.lightGrey;
+        break;
+        
 
     case MYTEXT:
       style['color'] = colors.myText;

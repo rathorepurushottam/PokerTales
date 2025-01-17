@@ -11,6 +11,7 @@ import {
   INTER_REGULAR,
   INTER_SEMI_BOLD,
   LIGHTBLUE,
+  MENUTEXT,
   TWENTY,
   WHITE,
 } from "./AppText";
@@ -24,57 +25,97 @@ import { useRef, useState } from "react";
 import ForgotPassword from "./ForgotPassword";
 import { toastAlert, validatePassword } from "../helper/utility";
 import { useDispatch, useSelector } from "react-redux";
-import { forgotPassword } from "../actions/authActions";
+import { forgotPassword, userSignup } from "../actions/authActions";
 import { SpinnerSecond } from "./SnipperSecond";
 
-
-const ResetPassword = ({ onCloseResetPass, signId, otp, setIsForgot }) => {
+const ResetPassword = ({
+  onCloseResetPass,
+  signId,
+  otp,
+  setIsForgot,
+  isProfile,
+  setResetPasswords,
+  setIsOpen,
+}) => {
   const dispatch = useDispatch();
   const loading = useSelector((state) => {
     return state.auth.isLoading;
   });
-  const [showPass, setShowPass] = useState(true);
+  const [showPass, setShowPass] = useState(false);
   const [showConfPass, setShowConfPass] = useState(true);
+  // const [showCurrentPass, setShowCurrentPass] = useState(true);
   const [newPassFocus, setNewPassFocus] = useState(false);
   const [conPassFocus, setConPassFocus] = useState(false);
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPass, setConfirmPass] = useState('');
+  // const [currentPassFocus, setCurrentPassFocus] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPass, setConfirmPass] = useState("");
+  // const [currentPass, setCurrentPass] = useState("");
   const [validPass, setValidPass] = useState(false);
-
 
   const handleResetPassword = () => {
     if (!newPassword) {
       toastAlert.showToastError("Please enter New Password");
       return;
-    };
+    }
     if (!confirmPass) {
       toastAlert.showToastError("Please enter Confirm Password");
       return;
-    };
-    if (!validatePassword(newPassword)) {
-      toastAlert.showToastError("Your password must be at least 8 characters long, contain at least one number and have a mixture of uppercase and lowercase letters.");
+    }
+    if (newPassword?.length < 7 && confirmPass?.length < 7) {
+      toastAlert.showToastError(
+        "Your password must be at least 8 characters long"
+      );
       return;
-    };
+    }
     if (confirmPass !== newPassword) {
-      toastAlert.showToastError("New Password and Confirm Password does not Match!");
+      toastAlert.showToastError(
+        "New Password and Confirm Password does not Match!"
+      );
       return;
-    };
-    setIsForgot(false);
-    let data = {
-      otp: parseInt(otp),
-      newPassword: newPassword,
-      confirmPassword: confirmPass,
-      signId: signId,
-    };
-    dispatch(forgotPassword(data, onCloseResetPass))
-  }
-
-  const handleValidatPass = (value) => {
-    setConfirmPass(value);
-    (validatePassword(newPassword) && validatePassword(value)) ? setValidPass(true) : setValidPass(false);
+    }
+    // if (isProfile) {
+    //   if (!currentPass) {
+    //     toastAlert.showToastError(
+    //       "Please Enter current Password"
+    //     );
+    //     return;
+    //   }
+    //   if(currentPass === newPassword) {
+    //     toastAlert.showToastError(
+    //       "New Password should be not same as Current Password"
+    //     );
+    //     return;
+    //   }
+    // }
+    if (isProfile) {
+      setResetPasswords({
+        newPassword: newPassword,
+        confirmPass: confirmPass,
+        // currentPass: currentPass,
+      });
+      let data = {
+        signId: signId,
+        type: "changePassword",
+      };
+      dispatch(userSignup(data, onCloseResetPass));
+    } else {
+      setIsForgot(false);
+      let data = {
+        otp: parseInt(otp),
+        newPassword: newPassword,
+        confirmPassword: confirmPass,
+        signId: signId,
+      };
+      dispatch(forgotPassword(data, onCloseResetPass, setIsOpen));
+    }
   };
 
-  
+  const handleValidatPass = (value) => {
+    console.log(value, "value");
+    setNewPassword(value);
+    value?.length > 7 ? setValidPass(true) : setValidPass(false);
+  };
+
   return (
     <View styles={styles.mainView}>
       <View
@@ -91,54 +132,101 @@ const ResetPassword = ({ onCloseResetPass, signId, otp, setIsForgot }) => {
       <AppText
         type={TWENTY}
         color={BLUE}
-        style={{ marginVertical: 15,  paddingHorizontal: universalPaddingHorizontal, }}
+        style={{
+          marginVertical: 15,
+          paddingHorizontal: universalPaddingHorizontal,
+        }}
         weight={INTER_SEMI_BOLD}
       >
         New Password
       </AppText>
+      {/* {isProfile && (
+        <InputBox
+          placeholder={"Enter Old Password"}
+          top
+          placeholderTextColor={"#00000066"}
+          textInputStyle={{
+            borderWidth: 1,
+            borderColor: currentPassFocus ? "#1251AE" : "#E4E4E4",
+            borderRadius: 12,
+            backgroundColor: "#F5F5F5",
+            height: 55,
+          }}
+          style={{ paddingHorizontal: universalPaddingHorizontal, marginVertical: 10 }}
+          value={currentPass}
+          onChange={(value) => setCurrentPass(value)}
+          onBlur={() => setCurrentPassFocus(false)}
+          onFocus={() => setCurrentPassFocus(true)}
+          isPassword={true}
+          secureTextEntry={showCurrentPass}
+          onToggle={() => setShowCurrentPass(!showCurrentPass)}
+          cursorColor={colors.black}
+        />
+      )} */}
+
       <InputBox
-        placeholder={"Enter Password"}
+        placeholder={"Enter New Password"}
         top
         placeholderTextColor={"#00000066"}
+        
         textInputStyle={{
           borderWidth: 1,
-          borderColor: newPassFocus ? "#1251AE" : "#E4E4E4",
+          borderColor: newPassFocus
+            ? "#1251AE"
+            : validPass
+            ? colors.green
+            : "#E4E4E4",
           borderRadius: 12,
           backgroundColor: "#F5F5F5",
           height: 55,
         }}
-        style={{paddingHorizontal: universalPaddingHorizontal}}
+        style={{ paddingHorizontal: universalPaddingHorizontal }}
         value={newPassword}
-        onChange={(value) => setNewPassword(value)}
+        onChange={(value) => handleValidatPass(value)}
         onBlur={() => setNewPassFocus(false)}
         onFocus={() => setNewPassFocus(true)}
         isPassword={true}
         secureTextEntry={showPass}
         onToggle={() => setShowPass(!showPass)}
+        cursorColor={colors.black}
       />
       <View style={styles.referView}>
-     
         <AppText type={FORTEEN} color={BLUE} weight={INTER_MEDIUM}>
-        Password must contain at least
+          Password must contain at least
         </AppText>
-       
-        <TouchableOpacityView
-          style={styles.checkbox}
-        >
-          <Checkbox
-            value={true}
-            style={{ borderColor: colors.green, borderRadius: 20 }}
-            innerStyle={{ backgroundColor: !validPass ? colors.darkBlue : colors.green, borderRadius: 20 }}
-            login
-          />
-          <AppText type={FORTEEN} color={BLACK} weight={INTER_MEDIUM} style={{marginLeft: 10}}>
-          8-20 Characters Long
-          </AppText>
+
+        <TouchableOpacityView style={styles.checkbox}>
+          <View style={styles.conditionView}>
+            {!validPass ? (
+              <Checkbox
+                value={true}
+                style={{ borderColor: colors.darkBlue, borderRadius: 20 }}
+                innerStyle={{
+                  backgroundColor: colors.darkBlue,
+                  borderRadius: 20,
+                }}
+                login
+              />
+            ) : (
+              <Checkbox
+                value={true}
+                style={{ borderColor: colors.green, borderRadius: 20 }}
+                innerStyle={{
+                  backgroundColor: colors.green,
+                  borderRadius: 20,
+                }}
+                login
+              />
+            )}
+
+            <AppText color={MENUTEXT} style={{ marginLeft: 10 }}>
+              8-20 Characters Long
+            </AppText>
+          </View>
         </TouchableOpacityView>
-       
       </View>
       <InputBox
-        placeholder={"Confirm Password"}
+        placeholder={"Enter Confirm New Password"}
         top
         placeholderTextColor={"#00000066"}
         textInputStyle={{
@@ -149,24 +237,28 @@ const ResetPassword = ({ onCloseResetPass, signId, otp, setIsForgot }) => {
           marginTop: 15,
           height: 55,
         }}
-        style={{paddingHorizontal: universalPaddingHorizontal}}
+        style={{ paddingHorizontal: universalPaddingHorizontal }}
         value={confirmPass}
-        onChange={(value) => handleValidatPass(value)}
+        onChange={(value) => setConfirmPass(value)}
         onBlur={() => setConPassFocus(false)}
         onFocus={() => setConPassFocus(true)}
         isPassword={true}
         secureTextEntry={showConfPass}
         onToggle={() => setShowConfPass(!showConfPass)}
+        cursorColor={colors.black}
       />
-      
+
       <PrimaryButton
         title={"Submit"}
         weight={INTER_MEDIUM}
-        disabled={!newPassword || !confirmPass}
+        disabled={!newPassword || !confirmPass || newPassword !== confirmPass}
         onPress={handleResetPassword}
-        buttonStyle={{ marginTop: 50, paddingHorizontal: universalPaddingHorizontal}}
+        buttonStyle={{
+          marginTop: 50,
+          paddingHorizontal: universalPaddingHorizontal,
+        }}
       />
-     <SpinnerSecond loading={loading} />
+      <SpinnerSecond loading={loading} />
     </View>
   );
 };
@@ -175,7 +267,7 @@ export default ResetPassword;
 
 const styles = StyleSheet.create({
   mainView: {
-    flex: 1
+    flex: 1,
   },
   referView: {
     // flexDirection: "row",
@@ -184,7 +276,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: universalPaddingHorizontal,
   },
   checkbox: {
-    flexDirection: "row",
+    flexDirection: "column",
     marginTop: 10,
+  },
+  conditionView: {
+    flexDirection: "row",
+    marginVertical: 5,
   },
 });

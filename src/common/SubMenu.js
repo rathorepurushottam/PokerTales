@@ -13,7 +13,7 @@ const SubMenu = ({ route }) => {
         translucent={true}
         networkActivityIndicatorVisible={true}
       />
-      <Header title={title} commonHeader />
+      <Header title={title} commonHeader style={{marginTop: 30}}/>
       <View style={{ flex: 1, backgroundColor: colors.white }}>
         <ScrollView>
           <AppText type={TEN} color={BLACK} weight={INTER_REGULAR} style={{paddingHorizontal: 20, paddingVertical: 10}}>

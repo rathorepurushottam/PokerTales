@@ -9,6 +9,7 @@ const AppSafeAreaView = ({
   style,
   statusColor,
   hidden,
+  barStyle,
 }) => {
   return Platform.OS === 'ios' ? (
     <View style={[{flex: 1}, style]}>
@@ -24,8 +25,8 @@ const AppSafeAreaView = ({
     <View style={[{flex: 1, backgroundColor:'#00071C'}, style]}>
       <StatusBar
         translucent={false}
-        backgroundColor={statusColor ? 'black' : "black"}
-        barStyle={"light-content"}
+        backgroundColor={statusColor ? statusColor : "black"}
+        barStyle={barStyle ? barStyle : "light-content"}
         hidden={hidden}
       />
       {children}

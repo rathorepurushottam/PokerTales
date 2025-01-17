@@ -34,14 +34,14 @@ const KycOption = ({ onCloseKycOptions, aadharStatus, panStatus }) => {
         <AppText style={{ color: "#FFFFFF1A" }}>BANNER HERE</AppText>
       </View>
       <View style={styles.aadharView}>
-        <AppText
+        {/* <AppText
           color={BLACK}
           weight={INTER_SEMI_BOLD}
           type={FORTEEN}
           style={{ marginVertical: 20 }}
         >
           Verify KYC
-        </AppText>
+        </AppText> */}
         <Pressable style={{ width: "80%" }} onPress={() => onCloseKycOptions('aadhar')}>
           <LinearGradient
             colors={["#D92537", "#FBB613"]}
@@ -77,22 +77,22 @@ const KycOption = ({ onCloseKycOptions, aadharStatus, panStatus }) => {
           width: "80%",
           height: 1.5,
           backgroundColor: "#83B8CC",
-          marginTop: 30,
+          marginTop: 5,
           alignSelf: "center",
         }}
       ></View>
       <View style={styles.aadharView}>
-        <AppText
+        {/* <AppText
           color={BLACK}
           weight={INTER_SEMI_BOLD}
           type={FORTEEN}
           style={{ marginVertical: 20 }}
         >
           Verify PAN
-        </AppText>
-        <Pressable style={{ width: "80%" }} onPress={() => onCloseKycOptions('pan')}>
+        </AppText> */}
+        <Pressable style={{ width: "80%" }} onPress={() => onCloseKycOptions('pan')} disabled={aadharStatus === undefined || aadharStatus === "Not Submitted"}>
           <LinearGradient
-            colors={["#CFBEDE", "#7BB8CA"]}
+            colors={aadharStatus === undefined || aadharStatus === "Not Submitted" ?[colors.disableText, colors.disableText] :["#CFBEDE", "#7BB8CA"]}
             style={styles.aadharOption}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
   },
   aadharOption: {
     height: 50,
-
+    marginVertical: 25,
     // justifyContent: "space-evenly",
     borderRadius: 12,
     flexDirection: "row",
