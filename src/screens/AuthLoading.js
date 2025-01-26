@@ -53,7 +53,7 @@ const AuthLoading = () => {
         };
 
     return (
-        <AppSafeAreaView statusColor={'#032146'}>
+        <AppSafeAreaView statusColor={'#00071C'}>
             <FastImage source={splash} resizeMode="cover" style={styles.splashImage}/>
             <SpinnerSecond loading={loading} />
         </AppSafeAreaView>

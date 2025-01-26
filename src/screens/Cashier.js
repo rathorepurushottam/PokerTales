@@ -259,7 +259,7 @@ const Cashier = () => {
               alignItems: "center",
               paddingVertical: 10,
             }}
-            onPress={() => NavigationService.navigate(TDS_CERTIFICATE_SCREEN)}
+            // onPress={() => NavigationService.navigate(TDS_CERTIFICATE_SCREEN)}
           >
             <View style={{ flexDirection: "row" }}>
               <View

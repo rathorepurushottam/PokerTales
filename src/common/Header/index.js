@@ -6,7 +6,7 @@ import {
   EIGHTEEN,
   FORTEEN,
   GOLDEN,
-  POPPINS_MEDIUM,
+  INTER_MEDIUM,
   SIXTEEN,
   TWENTY_FOUR,
   TWENTY_TWO,
@@ -62,7 +62,7 @@ const Header = (props) => {
                <AppText
               color={color ? color : WHITE}
               type={EIGHTEEN}
-              weight={POPPINS_MEDIUM}
+              weight={INTER_MEDIUM}
               style={styles.title}
             >
               {title}
@@ -79,7 +79,7 @@ const Header = (props) => {
               <AppText
                 color={color ? color : WHITE}
                 type={EIGHTEEN}
-                weight={POPPINS_MEDIUM}
+                weight={INTER_MEDIUM}
                 style={{ marginTop:2, marginLeft: 10}}
               >
                 {title}
@@ -91,7 +91,7 @@ const Header = (props) => {
             <AppText
               color={GOLDEN}
               type={EIGHTEEN}
-              weight={POPPINS_MEDIUM}
+              weight={INTER_MEDIUM}
               style={styles.balance}
             >
               ₹{formatNumber(totalBalance?.toFixed(2))}

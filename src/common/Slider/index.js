@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
     marginRight: 8
   },
   image: {
-    width: 280,
+    width: 250,
     height: 220,
   },
   paginationContainer: {
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     height: 6,
   },
   mainContainer: {
-    height: 300,
+    height: 280,
     alignSelf: "center",
     alignItems: "center",
     marginTop: 25

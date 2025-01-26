@@ -675,12 +675,12 @@ const AddCash = () => {
           <SecondaryButton
             buttonStyle={{
               backgroundColor:
-                amount < 50 || amount > 100000 ? colors.disableText : "#01B9F5",
+                (amount < 50 || amount > 100000 || isNaN(amount)) ? colors.disableText : "#01B9F5",
               width: "120%",
               alignSelf: "center",
             }}
             titleStyle={{ color: colors.white }}
-            disabled={amount < 50 || amount > 100000}
+            disabled={amount < 50 || amount > 100000 || isNaN(amount)}
             onPress={handleAddMoney}
             title={amount > 0 ? "Add ₹ " + amount : "Add "}
           />

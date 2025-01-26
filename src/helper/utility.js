@@ -11,7 +11,7 @@ export const toastAlert = {
       Platform.OS == 'ios' ?
         Toast.show({
           type: 'success',
-          text1: 'My Battle 11',
+          text1: 'PokerTales',
           text2: `${message}`,
           text2Style: { fontSize: 12, fontFamily: interBold },
           text1Style: { fontFamily: interBold },

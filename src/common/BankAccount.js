@@ -39,6 +39,7 @@ const BankAccount = ({ onCloseBank }) => {
   const [accountNumberFocus, setAccountNumberFocus] = useState(false);
   const [reAccountNumber, setReAccountNumber] = useState("");
   const [reAccountNumberFocus, setReAccountNumberFocus] = useState(false);
+  // const [error, setError] = useState('');
   const [numberError, setNumberError] = useState('');
   const [accountName, setAccountName] = useState('');
   const [accountNameFocus, setAccountNameFocus] = useState(false);
@@ -79,7 +80,7 @@ const BankAccount = ({ onCloseBank }) => {
     };
     
    
-    dispatch(submitBank(data, onCloseBank));
+    dispatch(submitBank(data, onCloseBank, setNumberError));
   };
 
   return (
@@ -103,7 +104,8 @@ const BankAccount = ({ onCloseBank }) => {
           placeholderTextColor={"#00000066"}
           textInputStyle={{
             borderWidth: 1,
-            borderColor: accountNumberFocus ? "#1251AE" : "#E4E4E4",
+            // borderColor: accountNumberFocus ? "#1251AE" : "#E4E4E4",
+            borderColor:  numberError ? colors.lightRed : accountNumberFocus ? "#1251AE" : "#E4E4E4",
             borderRadius: 12,
             backgroundColor: "#F5F5F5",
             height: 55,
@@ -113,7 +115,7 @@ const BankAccount = ({ onCloseBank }) => {
           onFocus={() => setAccountNumberFocus(true)}
           onBlur={() => setAccountNumberFocus(false)}
           onChange={(text) => {
-            setAccountNumber(text);
+            setAccountNumber(text?.trim());
           }}
           // isPassword
           secureTextEntry
@@ -137,7 +139,7 @@ const BankAccount = ({ onCloseBank }) => {
           onFocus={() => setReAccountNumberFocus(true)}
           onBlur={() => setReAccountNumberFocus(false)}
           onChange={(text) => {
-            setReAccountNumber(text);
+            setReAccountNumber(text?.trim());
           }}
           // autoCapitalize={"characters"}
           value={reAccountNumber}
@@ -197,7 +199,7 @@ const BankAccount = ({ onCloseBank }) => {
           onFocus={() => setIfscFocus(true)}
           onBlur={() => setIfscFocus(false)}
           onChange={(text) => {
-            setIfsc(text);
+            setIfsc(text?.trim());
           }}
           autoCapitalize={"characters"}
           value={ifsc}

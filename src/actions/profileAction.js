@@ -39,6 +39,8 @@ import {
   setWithdrawResponse,
   setRemainingInstantWithdraw,
   setWithdrawalFee,
+  setTdsPaid,
+  setBonusTransactions,
 } from "../slices/profileSlice";
 import {
   AUTHSTACK,
@@ -128,12 +130,13 @@ export const getTransactions = () => async (dispatch) => {
   try {
     dispatch(setLoading(true));
     const res = await appOperation.customer.get_transactions();
-    // console.log(res?.data?.depositTransactions, "getTransactions");
+    console.log(res?.data?.withdrawalTransactions, "getTransactions");
     if (res?.success) {
       dispatch(setLoading(false));
       dispatch(setDepositTransactions(res?.data?.depositTransactions));
       dispatch(setLobbyTransactions(res?.data?.pokerGameTransactions));
       dispatch(setWithdrawTransactions(res?.data?.withdrawalTransactions));
+      dispatch(setBonusTransactions(res?.data?.bonusTransactions));
     }
   } catch (e) {
     dispatch(setLoading(false));
@@ -241,7 +244,7 @@ export const submitUPI =
   };
 
 export const submitBank =
-  (data, close = () => {}) =>
+  (data, close = () => {}, setNumberError= () => {}) =>
   async (dispatch) => {
     try {
       dispatch(setLoading(true));
@@ -252,12 +255,12 @@ export const submitBank =
         toastAlert.showToastError(res?.message);
         close();
       } else {
-        toastAlert.showToastError(res?.message);
+        setNumberError(res?.message);
       }
     } catch (e) {
       dispatch(setLoading(false));
       console.log("error in submitBank", e);
-      toastAlert.showToastError(e?.message);
+      setNumberError(e?.message);
     } finally {
       dispatch(setLoading(false));
     }
@@ -504,6 +507,7 @@ export const userWithdrawal =
         dispatch(getUserWallet());
         dispatch(setWithdrawResponse(res?.data));
         dispatch(getPaymentType());
+        dispatch(getTransactions());
         onShowWithdrawStatus();
       }
       dispatch(setLoading(false));
@@ -582,12 +586,12 @@ export const getInitGame = (type) => async (dispatch) => {
       dispatch(setInitGame(res?.data));
       if (type === "cashGame") {
         NavigationService.navigate(WEB_URL_SCREEN, {
-          title: "Game",
+          title: "Cash Game",
           link: res?.data?.["redirect-url"] + "&page=tables",
         });
       } else {
         NavigationService.navigate(WEB_URL_SCREEN, {
-          title: "Game",
+          title: "Tournaments",
           link: res?.data?.["redirect-url"] + "&page=tournaments",
         });
       }
@@ -657,6 +661,7 @@ export const getPaymentType = (data) => async (dispatch) => {
       dispatch(
         setRemainingInstantWithdraw(res?.data?.remainingInstantWithdrawals)
       );
+      dispatch(setTdsPaid(res?.data?.tds));
       dispatch(setWithdrawalFee(res?.data?.withdrawalFee));
     }
   } catch (e) {
@@ -675,8 +680,8 @@ export const getUserPaymentMode = (data) => async (dispatch) => {
     dispatch(setLoading(true));
     const res = await appOperation.customer.get_payment_type(data);
     if (res?.success) {
-      dispatch(setUserBank(res?.data?.bank[0]));
-      dispatch(setUserUPI(res?.data?.upi[0]));
+      dispatch(setUserBank(res?.data?.bank));
+      dispatch(setUserUPI(res?.data?.upi));
     }
   } catch (e) {
     dispatch(setLoading(false));

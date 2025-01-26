@@ -34,6 +34,8 @@ export const initialState = {
   withdrawResponse: {},
   remainingInstantWithdraw: undefined,
   withdrawalFee: undefined,
+  tdsPaid: undefined,
+  bonusTransaction: [],
 };
 export const profileSlice = createSlice({
   name: 'profile',
@@ -138,6 +140,13 @@ export const profileSlice = createSlice({
     setWithdrawalFee: (state, {payload}) => {
       state.withdrawalFee = payload;
     },
+    setTdsPaid: (state, {payload}) => {
+      state.tdsPaid = payload;
+    },
+    setBonusTransactions: (state, {payload}) => {
+      state.bonusTransaction = payload;
+    },
+    
   },
 });
 
@@ -173,7 +182,9 @@ export const {
   setGstTransaction,
   setWithdrawResponse,
   setRemainingInstantWithdraw,
-  setWithdrawalFee
+  setWithdrawalFee,
+  setTdsPaid,
+  setBonusTransactions
 } = profileSlice.actions;
 
 export default profileSlice.reducer;

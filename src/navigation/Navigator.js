@@ -221,15 +221,25 @@ const BottomMainTab = () => {
           component={Home}
           options={{
             tabBarIcon: ({ focused }) => (
+              <View style={{ alignItems: "center", width: 50 }}>
               <FastImage
-                source={bottomMenuIcon}
+               source={bottomMenuIcon}
                 tintColor={focused ? colors.goldenColor : colors.gray}
                 style={{
                   width: 25,
                   height: 25,
+                  marginTop: 30,
                 }}
-                resizeMode="contain"
-              />
+                resizeMode="contain" />
+              <AppText
+                style={{ marginTop: 4 }}
+                color={focused ? BROWNYELLOW : GRY}
+                weight={INTER_MEDIUM}
+                type={TEN}
+              >
+                Home
+              </AppText>
+            </View>
             ),
           }}
         />

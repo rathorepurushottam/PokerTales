@@ -91,12 +91,20 @@ const Withdrawal = () => {
     return state.profile.userUPI;
   });
 
+  const userBank = useSelector((state) => {
+    return state.profile.userBank;
+  });
+
   const withdrawResponse = useSelector((state) => {
     return state.profile.withdrawResponse;
   });
 
   const remainingInstantWithdraw = useSelector((state) => {
     return state.profile.remainingInstantWithdraw;
+  });
+
+  const tdsPaid = useSelector((state) => {
+    return state.profile.tdsPaid
   });
 
   const withdrawalFee = useSelector((state) => {
@@ -121,23 +129,28 @@ const Withdrawal = () => {
       toastAlert.showToastError("Please select Payment Method");
       return;
     }
-    if (remainingInstantWithdraw < 1) {
-      toastAlert.showToastError(
-        `You have ${remainingInstantWithdraw} Remaining Instant per day`
-      );
-      return;
-    }
+    if (withdrawType === "instant") {
+      if (remainingInstantWithdraw < 1) {
+        setError(
+          `You have ${remainingInstantWithdraw} Remaining Instant per day`
+        );
+        return;
+      }
+    };
+    setError('');
+    
     let data = {
       amount: amount,
-      fundAccountId: userUPI?.fundAccountId,
-      accountType: userUPI?.upiId ? "vpa" : "bank",
+      fundAccountId: paymentMethod?.fundAccountId,
+      accountType: paymentMethod?.upiId ? "vpa" : "bank_account",
       withdrawalType: withdrawType === "standard" ? "Standard" : "Instant",
     };
     dispatch(userWithdrawal(data, handleShowWithdrawStatus));
   };
 
   const handleValidAmount = (value) => {
-    let pay = parseInt(value);
+    console.log(value, "value");
+    let pay = parseInt(value ? value : 0);
     setAmount(pay);
     if (pay < 50) {
       setError("Minimum withdrawal is ₹100");
@@ -157,7 +170,7 @@ const Withdrawal = () => {
 
   const handleCalculateTds = (pay) => {
     const tdsless =
-      userWallet?.totalDepositedBalance - userWallet?.totalWithdrawnAmount;
+      userWallet?.totalDepositedBalance - userWallet?.totalWithdrawnAmount + tdsPaid;
     let tds;
     let charges =
       withdrawType === "instant" ? pay * (withdrawalFee / 100) : 0;
@@ -182,7 +195,7 @@ const Withdrawal = () => {
     setAmount('');
   };
 
-  console.log(amount, "amount");
+  // console.log(userBank, "userBank");
 
   return (
     <AppSafeAreaView statusColor={"#032146"}>
@@ -361,6 +374,11 @@ const Withdrawal = () => {
                 {error}
               </AppText>
             )}
+            {(withdrawType === 'standard' && !error && amount) && (
+              <AppText type={TWELVE} color={RED} style={{ marginTop: 5 }}>
+                {'TDS will be calculated based on your ledger at the time of processing'}
+              </AppText>
+            )}
           </View>
           {amount ? (
             <View
@@ -395,10 +413,11 @@ const Withdrawal = () => {
                     resizeMode="contain"
                   />
                 </TouchableOpacity>
-
-                <AppText type={TWELVE} color={RED}>
+                {withdrawType === 'standard' ? <AppText type={TWELVE} color={RED}>To be calucated</AppText> :  <AppText type={TWELVE} color={RED}>
                   (-) ₹ {tdsAmount?.toFixed(2)}
-                </AppText>
+                </AppText>}
+
+               
               </View>
               <View
                 style={{
@@ -536,8 +555,8 @@ const Withdrawal = () => {
                   Add New
                 </AppText>
               </View>
-              {userUPI ? (
-                <TouchableOpacity
+              {userUPI?.length > 0 ? (
+                userUPI.map((item) => (<TouchableOpacity
                   style={{
                     flexDirection: "row",
                     justifyContent: "space-between",
@@ -545,10 +564,10 @@ const Withdrawal = () => {
                     borderTopColor: "#E4E4E4",
                     padding: 10,
                   }}
-                  onPress={() => setPaymentMethod(userUPI)}
+                  onPress={() => setPaymentMethod(item)}
                 >
                   <View style={{ flexDirection: "row", alignItems: "center" }}>
-                    <AppText color={BLACK}>{userUPI?.upiId}</AppText>
+                    <AppText color={BLACK}>{item?.upiId}</AppText>
                     <FastImage
                       source={successfullIcon}
                       resizeMode="contain"
@@ -557,33 +576,39 @@ const Withdrawal = () => {
                   </View>
                   <View
                     style={[
-                      paymentMethod?.upiId === userUPI?.upiId &&
+                      paymentMethod?.upiId === item?.upiId &&
                         styles.selectedMethod,
                     ]}
                   >
                     <RadioButton
-                      selected={paymentMethod?.upiId === userUPI?.upiId}
+                      selected={paymentMethod?.upiId === item?.upiId}
                       style={{ marginRight: 5 }}
                     />
                   </View>
-                </TouchableOpacity>
+                </TouchableOpacity>))
+                
               ) : (
                 ""
               )}
             </View>
             <View
               style={{
-                flexDirection: "row",
                 borderWidth: 1,
                 borderColor: "#E4E4E4",
                 borderRadius: 13,
+                marginTop: 10
+              }}
+            >
+               <View
+              style={{
+                flexDirection: "row",
                 justifyContent: "space-between",
                 alignItems: "center",
-                marginTop: 10,
+                // marginTop: 10,
               }}
             >
               <View
-                style={{
+                 style={{
                   flexDirection: "row",
                   paddingVertical: 10,
                   marginLeft: 10,
@@ -625,7 +650,45 @@ const Withdrawal = () => {
               >
                 Add New
               </AppText>
+              
             </View>
+            {userBank?.length > 0 ? (
+                userBank.map((item) => (<TouchableOpacity
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    borderTopWidth: 1,
+                    borderTopColor: "#E4E4E4",
+                    padding: 10,
+                  }}
+                  onPress={() => setPaymentMethod(item)}
+                >
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <AppText color={BLACK}>{item?.bankName}</AppText>
+                    <FastImage
+                      source={successfullIcon}
+                      resizeMode="contain"
+                      style={{ width: 12, height: 12, marginLeft: 5 }}
+                    />
+                  </View>
+                  <View
+                    style={[
+                      paymentMethod?.bankName === item?.bankName &&
+                        styles.selectedMethod,
+                    ]}
+                  >
+                    <RadioButton
+                      selected={paymentMethod?.bankName === item?.bankName}
+                      style={{ marginRight: 5 }}
+                    />
+                  </View>
+                </TouchableOpacity>))
+                
+              ) : (
+                ""
+              )}
+            </View>
+           
           </View>
         </ScrollView>
         <View
@@ -653,12 +716,12 @@ const Withdrawal = () => {
 
           <PrimaryButton
             title={amount > 0 ? "Withdraw ₹ " + amount : "Withdraw "}
-            disabled={amount < 100 || amount > 100000}
+            disabled={amount < 100 || amount > 100000 || isNaN(amount) || amount > userWallet?.winningAmount}
             // disabled={true}
             buttonStyle={{
               backgroundColor:
-                (amount < 100 || amount > 100000) && colors.disableText,
-              // : "#01B9F5",
+                (amount < 100 || amount > 100000 || isNaN(amount) || amount > userWallet?.winningAmount) ? colors.disableText
+               : "#01B9F5",
               width: "100%",
             }}
             onPress={handleUserWithdrawal}

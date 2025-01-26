@@ -22,6 +22,9 @@ import { useEffect } from "react";
 import NavigationService from "../navigation/NavigationService";
 import { useDispatch } from "react-redux";
 import { getUserWallet } from "../actions/profileAction";
+import { HomeHeader } from "./HomeHeader";
+import { GameHeader } from "./GameHeader";
+import { ADD_CASH_SCREEN } from "../navigation/routes";
 
 const WebUrl = ({ route }) => {
   let title = route?.params?.title;
@@ -30,17 +33,18 @@ const WebUrl = ({ route }) => {
 
   useEffect(() => {
     const backAction = () => {
-      Alert.alert("Hold on!", "Do you want to exit the Game?", [
-        {
-          text: "Cancel",
-          onPress: () => null,
-          style: "cancel",
-        },
-        {
-          text: "YES",
-          onPress: () => handleNavigationToApp(),
-        },
-      ]);
+      // Alert.alert("Hold on!", "Do you want to exit the Game?", [
+      //   {
+      //     text: "Cancel",
+      //     onPress: () => null,
+      //     style: "cancel",
+      //   },
+      //   {
+      //     text: "YES",
+      //     onPress: () => handleNavigationToApp(),
+      //   },
+      // ]);
+      NavigationService.goBack();
       return true; // Block the default behavior
     };
 
@@ -64,12 +68,11 @@ const WebUrl = ({ route }) => {
         translucent={true}
         networkActivityIndicatorVisible={true}
       />
-      {/* <Header title={title} commonHeader /> */}
+      <GameHeader title={title}  handleAddCash={() => NavigationService.navigate(ADD_CASH_SCREEN)}/>
       <WebView
         source={{ uri: link }}
         style={{ flex: 1 }}
         basicAuthCredential={{ username: "pkr", password: "pokertales" }}
-        containerStyle={{ paddingTop: 40 }}
       />
     </AppSafeAreaView>
   );

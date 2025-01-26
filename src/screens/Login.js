@@ -148,7 +148,7 @@ const Login = () => {
   };
 
   return (
-    <AppSafeAreaView statusColor={'#032146'}>
+    <AppSafeAreaView statusColor={'#00071C'}>
       <KeyBoardAware style={{ paddingHorizontal: 0 }}>
         <ImageBackground
           source={backgroundImage}
