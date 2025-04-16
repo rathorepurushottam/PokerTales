@@ -21,7 +21,7 @@ import { WebView } from "react-native-webview";
 import { useEffect } from "react";
 import NavigationService from "../navigation/NavigationService";
 import { useDispatch } from "react-redux";
-import { getUserWallet } from "../actions/profileAction";
+import { getUserWallet, getUserWalletURL } from "../actions/profileAction";
 import { HomeHeader } from "./HomeHeader";
 import { GameHeader } from "./GameHeader";
 import { ADD_CASH_SCREEN } from "../navigation/routes";
@@ -56,8 +56,16 @@ const WebUrl = ({ route }) => {
     return () => backHandler.remove(); // Cleanup on unmount
   }, []);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      dispatch(getUserWalletURL());
+    }, 2000);
+
+    return () => clearInterval(interval)
+  }, []);
+
   const handleNavigationToApp = () => {
-    dispatch(getUserWallet());
+    dispatch(getUserWalletURL());
     NavigationService.goBack();
   };
 
@@ -68,7 +76,7 @@ const WebUrl = ({ route }) => {
         translucent={true}
         networkActivityIndicatorVisible={true}
       />
-      <GameHeader title={title}  handleAddCash={() => NavigationService.navigate(ADD_CASH_SCREEN)}/>
+      <GameHeader title={title}  handleAddCash={() => NavigationService.navigate(ADD_CASH_SCREEN)} onNavigationToApp={handleNavigationToApp}/>
       <WebView
         source={{ uri: link }}
         style={{ flex: 1 }}

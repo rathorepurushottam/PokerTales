@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   AppState,
+  ImageBackground,
   Linking,
   Platform,
   Pressable,
@@ -23,6 +24,7 @@ import {
   FIFTEEN,
   FORTEEN,
   GREEN,
+  INTER_BOLD,
   INTER_MEDIUM,
   INTER_REGULAR,
   INTER_SEMI_BOLD,
@@ -48,6 +50,7 @@ import {
   backIcon,
   tdsIcon,
   walletBottomIcon,
+  transactionImage,
 } from "../helper/image";
 import RBSheet from "react-native-raw-bottom-sheet";
 import FastImage from "react-native-fast-image";
@@ -59,8 +62,10 @@ import {
   getKycDetails,
   getPaymentState,
   getPaymentType,
+  getUserPaymentMode,
   getUserWallet,
   initDepositAmount,
+  revertTransaction,
 } from "../actions/profileAction";
 import moment from "moment";
 import ListingItem from "../common/Profile/ListingItem";
@@ -89,6 +94,10 @@ const Cashier = () => {
     return state.profile.userWallet;
   });
 
+  const withdrawTransactions = useSelector((state) => {
+    return state.profile.withdrawTransactions;
+  });
+
   const kycDetails = useSelector((state) => {
     return state.profile.kycDetails;
   });
@@ -103,6 +112,7 @@ const Cashier = () => {
     dispatch(getPaymentType());
     dispatch(getUserWallet());
     dispatch(getKycDetails());
+    dispatch(getUserPaymentMode());
     setTimeout(() => {
       console.log("Refreshed!");
       setRefreshing(false);
@@ -166,7 +176,13 @@ const Cashier = () => {
     refRBSheetPanDetails.current.close();
     refRBSheetPanNumber.current.open();
   };
-  // console.log(kycDetails, "kycDetails")
+
+  const handleRevertTransaction = () => {
+    let data = {
+      withdrawalId: withdrawTransactions[0]?._id
+    };
+    dispatch(revertTransaction(data));
+  };
 
   return (
     <AppSafeAreaView statusColor={'#032146'}>
@@ -200,6 +216,34 @@ const Cashier = () => {
           />
         </LinearGradient>
         <View style={{ marginTop: 30, marginHorizontal: 5 }}>
+          {(withdrawTransactions?.length > 0 && withdrawTransactions[0]?.status === "Pending" && withdrawTransactions[0]?.withdrawalType === "Standard") ? 
+          <ImageBackground source={transactionImage} resizeMode="contain" style={{width: "100%", height: 140, marginVertical: 10}}>
+            
+            <View style={{padding: 15, justifyContent: "space-between", height: "100%"}}>
+              <View style={{flexDirection: "row", justifyContent: "space-between",  alignItems: "center"}}>
+              <View>
+                 <AppText>Requested to:</AppText>
+                 <AppText>{moment(withdrawTransactions[0]?.createdAt).format("MMMM Do YYYY, h:mm:ss a")}</AppText>
+              </View>
+              <View><AppText type={SIXTEEN} weight={INTER_BOLD}>₹{withdrawTransactions[0]?.amount?.toFixed(2)}</AppText></View>
+              </View>
+              <View style={{alignSelf: "flex-end", width: "35%"}}>
+              <SecondaryButton
+                title={"Revert"}
+                buttonStyle={{
+                  backgroundColor:
+                     colors.lightOrange,
+                  width: "60%",
+                  // alignSelf: "right"
+                  
+                }}
+                titleStyle={{ color: colors.black }}
+                onPress={handleRevertTransaction}
+              />
+              </View>
+              
+             </View>
+          </ImageBackground> : ""}
           <TouchableOpacity
             onPress={() => NavigationService.navigate(TRANSACTIONS_SCREEN)}
             style={{
@@ -259,7 +303,7 @@ const Cashier = () => {
               alignItems: "center",
               paddingVertical: 10,
             }}
-            // onPress={() => NavigationService.navigate(TDS_CERTIFICATE_SCREEN)}
+            onPress={() => NavigationService.navigate(TDS_CERTIFICATE_SCREEN)}
           >
             <View style={{ flexDirection: "row" }}>
               <View

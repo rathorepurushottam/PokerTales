@@ -8,7 +8,7 @@ import {
 import { AppSafeAreaView } from "../common/AppSafeAreaView";
 import Header from "../common/Header";
 import { colors } from "../theme/color";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Collapsible from "react-native-collapsible";
 
 import {
@@ -28,19 +28,38 @@ import {
   WITHDRAWBLUE,
 } from "../common/AppText";
 import { useDispatch, useSelector } from "react-redux";
-import { getTdsTransactions, getTransactions } from "../actions/profileAction";
+import { getTdsTransactions, getTransactions, revertTransaction } from "../actions/profileAction";
 import FastImage from "react-native-fast-image";
-import { failedVector, inprocessVector, successVector } from "../helper/image";
+import {
+  backIcon,
+  copyIcon,
+  failedVector,
+  inprocessVector,
+  revertedIcon,
+  successVector,
+} from "../helper/image";
 import moment from "moment";
 import { toastAlert } from "../helper/utility";
-import RNHTMLtoPDF from "react-native-html-to-pdf";
-import RNFS from "react-native-fs";
-import { setDepositTransactions, setWithdrawTransactions } from "../slices/profileSlice";
+import {
+  setDepositTransactions,
+  setWithdrawTransactions,
+} from "../slices/profileSlice";
+import Clipboard from "@react-native-clipboard/clipboard";
+import TransactionDetails from "../common/TransactionDetails";
+import RBSheet from "react-native-raw-bottom-sheet";
+import WithdrawDetails from "../common/WithdrawDetails";
+import SecondaryButton from "../common/SecondaryButton";
 
 const Transactions = () => {
   const dispatch = useDispatch();
+  const refRBSheetDetails = useRef();
+  const refRBSheetWithdrawDetails = useRef();
   const [activeTab, setActiveTab] = useState("deposit");
-  const [subTabActive, setSubTabActive] = useState('');
+  const [subTabActive, setSubTabActive] = useState("");
+  const [title, setTitle] = useState("");
+  const [details, setDetails] = useState("");
+  const [filterDepositData, setFilterDepositData] = useState([]);
+  const [filterWithdrawData, setFilterWithdrawData] = useState([]);
 
   const depositTransactions = useSelector((state) => {
     return state.profile.despositTransactions;
@@ -48,6 +67,10 @@ const Transactions = () => {
 
   const bonusTransactions = useSelector((state) => {
     return state.profile.bonusTransaction;
+  });
+
+  const leaderBoardTransactions = useSelector((state) => {
+    return state.profile.leaderBoardTransaction;
   });
 
   const lobbyTransactions = useSelector((state) => {
@@ -67,76 +90,30 @@ const Transactions = () => {
   });
 
   useEffect(() => {
-    dispatch(getTransactions());
+    dispatch(getTransactions(setFilterDepositData, setFilterWithdrawData));
     dispatch(getTdsTransactions());
   }, []);
 
-  const generatePDF = async (item) => {
-    try {
-      // Define your HTML content for the invoice
-      const htmlContent = `
-        <html>
-          <head>
-            <style>
-              body { font-family: Arial, sans-serif; padding: 20px; }
-              h1 { text-align: center; color: #333; }
-              table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-              table, th, td { border: 1px solid #ddd; }
-              th, td { padding: 8px; text-align: left; }
-              th { background-color: #f4f4f4; }
-            </style>
-          </head>
-          <body>
-            <h1>Invoice</h1>
-            <p><strong>Date:</strong> ${moment(item?.createdAt).format(
-              "MMMM Do YYYY, h:mm:ss a"
-            )}</p>
-            <p><strong>Customer Name:</strong> ${userData?.fullName}</p>
-            <table>
-              <tr>
-                <th>Amount</th>
-                <th>Reference Id</th>
-                <th>Payment Gateway</th>
-              </tr>
-              
-              <tr>
-                <td>${item?.totalAmount}</td>
-                <td>${item?.merchantTransactionId}</td>
-                <td>${item?.gateway}</td>
-              </tr>
-              
-            </table>
-          </body>
-        </html>
-      `;
+  useEffect(() => {
+    setFilterDepositData(depositTransactions);
+    setFilterWithdrawData(withdrawTransactions);
+  }, []);
 
-      // Generate PDF
-      const options = {
-        html: htmlContent,
-        fileName: "invoice",
-        directory: "Documents", // Saved in the app's Documents folder
-      };
+ 
 
-      const file = await RNHTMLtoPDF.convert(options);
-      toastAlert.showToastError(`PDF saved at ${file.filePath}`);
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      toastAlert.showToastError("Failed to generate the PDF.");
-    }
-    await RNFS.moveFile(
-      file.filePath,
-      RNFS.DownloadDirectoryPath + "/invoice.pdf"
-    );
-    toastAlert.showToastError("PDF has been saved to the Downloads folder!");
+  const handleCodeCopy = (id) => {
+    Clipboard.setString(id);
+    toastAlert.showToastError("Copied");
   };
 
   const FAQItem = ({ item }) => {
-    // console.log(item, "item");
     const [isCollapsed, setIsCollapsed] = useState(true);
-
+    console.log(item, "item");
     return (
       <>
-        <TouchableOpacity onPress={() => setIsCollapsed(!isCollapsed)}>
+        <TouchableOpacity
+          onPress={() => handleTransactionDetails("Deposit Details", item)}
+        >
           <View
             style={{
               flexDirection: "row",
@@ -217,8 +194,20 @@ const Transactions = () => {
             </View>
 
             <AppText type={SIXTEEN} weight={INTER_BOLD} color={BLACK}>
-              ₹ {item?.totalAmount}
+              ₹ {item?.totalAmount?.toFixed(2)}
             </AppText>
+            <TouchableOpacity onPress={() => setIsCollapsed(!isCollapsed)}>
+              <FastImage
+                source={backIcon}
+                tintColor={colors.black}
+                resizeMode="contain"
+                style={{
+                  width: 15,
+                  height: 15,
+                  transform: [{ rotateZ: isCollapsed ? "270deg" : "90deg" }],
+                }}
+              />
+            </TouchableOpacity>
           </View>
         </TouchableOpacity>
         <Collapsible collapsed={isCollapsed}>
@@ -233,39 +222,107 @@ const Transactions = () => {
               alignItems: "center",
             }}
           >
-            <View>
+            {/* <View style={{flexDirection: "row", justifyContent: "space-between"}}> */}
               <AppText type={FORTEEN} style={{ color: "#797979CC" }}>
                 Reference Id:-{" "}
               </AppText>
-              <AppText type={FORTEEN} color={MENUTEXT}>
-                {item?.merchantTransactionId}
+              <TouchableOpacity
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  // marginRight: 20,
+                }}
+                onPress={() => handleCodeCopy(item?._id)}
+              >
+                <AppText type={FORTEEN} color={MENUTEXT}>
+                  {/* {} */}
+                  {/* {item?.gateway === "CashFree"
+                    ? item?.utr
+                    : item?.merchantTransactionId} */}
+                    {item?.utr}
+                </AppText>
+                <FastImage
+                  source={copyIcon}
+                  style={{ width: 15, height: 15, marginLeft: 5 }}
+                  resizeMode="contain"
+                  tintColor={colors.blue}
+                />
+              </TouchableOpacity>
+            {/* </View> */}
+            {/* {(item?.status === "Success" || item?.status === "Confirmed") && (
+              <AppText
+                type={FORTEEN}
+                color={WITHDRAWBLUE}
+                style={{ textDecorationLine: "underline" }}
+                onPress={() => generatePDF(item)}
+              >
+                Download invoice
               </AppText>
-            </View>
-            <AppText
-              type={FORTEEN}
-              color={WITHDRAWBLUE}
-              style={{ textDecorationLine: "underline" }}
-              onPress={() => generatePDF(item)}
-            >
-              Download invoice
-            </AppText>
+            )} */}
           </View>
         </Collapsible>
       </>
     );
   };
 
-
   const handleFilterTransaction = (type) => {
-    setSubTabActive(type)
-    if(activeTab === "deposit") {
-      let filterData = depositTransactions?.filter(item => item?.status === type);
-        dispatch(setDepositTransactions(filterData));
-    }else if(activeTab === "withdraw") {
-      let filterData = withdrawTransactions?.filter(item => item?.status === type);
-        dispatch(setWithdrawTransactions(filterData));
+    console.log(subTabActive , type,"setSubTabActive");
+    setSubTabActive(subTabActive === type ? "": type);
+    if (activeTab === "deposit") {
+      if (subTabActive === type) {
+        setFilterDepositData(depositTransactions);
+      } else {
+        let filterData = depositTransactions?.filter(
+          (item) => item?.status === type
+        );
+        setFilterDepositData(filterData);
+      }
+     
+    } else if (activeTab === "withdraw") {
+      if (subTabActive === type) {
+          setFilterWithdrawData(withdrawTransactions);
+      } else {
+        let filterData = withdrawTransactions?.filter(
+          (item) => item?.status === type
+        );
+        setFilterWithdrawData(filterData);
+      }
+      
     }
+  };
 
+  const handleTransactionDetails = (title, item) => {
+    refRBSheetDetails.current.open();
+    setTitle(title);
+    setDetails(item);
+  };
+
+  const handleWithdrawDetails = (title, item) => {
+    refRBSheetWithdrawDetails.current.open();
+    setTitle(title);
+    setDetails(item);
+  };
+
+  const handleCloseDetails = () => {
+    refRBSheetDetails.current.close();
+  };
+
+  const handleSwitchTab = (tab) => {
+    setActiveTab(tab.toLowerCase());
+    setSubTabActive("");
+    if (tab === 'Deposit') {
+      setFilterDepositData(depositTransactions);
+    };
+    if (tab === 'Withdraw') {
+      setFilterWithdrawData(withdrawTransactions);
+    }
+  };
+
+  const handleRevertTransaction = (item) => {
+    let data = {
+      withdrawalId: item?._id
+    };
+    dispatch(revertTransaction(data));
   }
 
   // console.log(tdsTransaction, "tdsTransaction");
@@ -275,40 +332,179 @@ const Transactions = () => {
       <Header title={"My Transactions"} />
       <View style={{ flex: 1, backgroundColor: colors.white }}>
         <View style={styles.container}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-            {["Deposit", "Withdraw", "TDS", "LB", "Bonus"].map((tab) => (
-              <TouchableOpacity
-                key={tab}
-                onPress={() => setActiveTab(
-                  tab.toLowerCase(),
-                  setSubTabActive('')
-                )}
-                style={[
-                  styles.tab,
-                  activeTab === tab.toLowerCase()
-                    ? styles.activeTab
-                    : styles.inactiveTab,
-                ]}
-              >
-                <AppText style={styles.tabText}>{tab}</AppText>
-              </TouchableOpacity>
-            ))}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+          >
+            {["Deposit", "Withdraw", "TDS", "LeaderBoard", "Bonus", "Game"].map(
+              (tab) => (
+                <TouchableOpacity
+                  key={tab}
+                  onPress={() =>
+                    handleSwitchTab(tab)
+                  }
+                  style={[
+                    styles.tab,
+                    activeTab === tab.toLowerCase()
+                      ? styles.activeTab
+                      : styles.inactiveTab,
+                  ]}
+                >
+                  <AppText style={styles.tabText}>{tab}</AppText>
+                </TouchableOpacity>
+              )
+            )}
           </ScrollView>
         </View>
-        <View style={{ flexDirection: "row", justifyContent: "space-evenly" }}>
-          <TouchableOpacity style={[styles.subTab, {backgroundColor: subTabActive === "Success" ? "#C7F2C9" : "#F4F4F4"}]} onPress={() => handleFilterTransaction("Success")}>
-            <AppText style={{ color: subTabActive === "Success" ? "#309B36" : "#3B3B3B" }}>Success</AppText>
+        {activeTab === 'deposit' ? <View style={{ flexDirection: "row", justifyContent: "space-evenly" }}>
+          <TouchableOpacity
+            style={[
+              styles.subTab,
+              {
+                backgroundColor:
+                  subTabActive === "Confirmed" ? "#C7F2C9" : "#F4F4F4",
+              },
+            ]}
+            onPress={() => handleFilterTransaction("Confirmed" )}
+          >
+            <AppText
+              style={{
+                color: subTabActive === "Confirmed" ? "#309B36" : "#3B3B3B",
+              }}
+            >
+              Success
+            </AppText>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.subTab, {backgroundColor: subTabActive === "Pending" ? "#C7F2C9" : "#F4F4F4"}]} onPress={() => handleFilterTransaction('Pending')}>
-            <AppText style={{ color: subTabActive === "Pending" ? "#309B36" : "#3B3B3B" }}>Pending</AppText>
+          <TouchableOpacity
+            style={[
+              styles.subTab,
+              {
+                backgroundColor:
+                  subTabActive === "Pending" ? "#C7F2C9" : "#F4F4F4",
+              },
+            ]}
+            onPress={() => handleFilterTransaction("Pending")}
+          >
+            <AppText
+              style={{
+                color: subTabActive === "Pending" ? "#309B36" : "#3B3B3B",
+              }}
+            >
+              Pending
+            </AppText>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.subTab, {backgroundColor: subTabActive === "Rejected" ? "#C7F2C9" : "#F4F4F4"}]} onPress={() => handleFilterTransaction('Rejected')}>
-            <AppText style={{ color: subTabActive === "Rejected" ? "#309B36" : "#3B3B3B" }}>Rejected</AppText>
+          <TouchableOpacity
+            style={[
+              styles.subTab,
+              {
+                backgroundColor:
+                  subTabActive === "Rejected" ? "#C7F2C9" : "#F4F4F4",
+              },
+            ]}
+            onPress={() => handleFilterTransaction("Rejected")}
+          >
+            <AppText
+              style={{
+                color: subTabActive === "Rejected" ? "#309B36" : "#3B3B3B",
+              }}
+            >
+              Rejected
+            </AppText>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.subTab, {backgroundColor: subTabActive === "Refund" ? "#C7F2C9" : "#F4F4F4"}]} onPress={() => handleFilterTransaction('Refund')}>
-            <AppText style={{ color: subTabActive === "Refund" ? "#309B36" : "#3B3B3B" }}>Refund</AppText>
+          <TouchableOpacity
+            style={[
+              styles.subTab,
+              {
+                backgroundColor:
+                  subTabActive === "Refund" ? "#C7F2C9" : "#F4F4F4",
+              },
+            ]}
+            onPress={() => handleFilterTransaction("Refund")}
+          >
+            <AppText
+              style={{
+                color: subTabActive === "Refund" ? "#309B36" : "#3B3B3B",
+              }}
+            >
+              Revert
+            </AppText>
           </TouchableOpacity>
-        </View>
+        </View> : activeTab === "withdraw" ? <View style={{ flexDirection: "row", justifyContent: "space-evenly" }}>
+          <TouchableOpacity
+            style={[
+              styles.subTab,
+              {
+                backgroundColor:
+                  subTabActive === "Completed" ? "#C7F2C9" : "#F4F4F4",
+              },
+            ]}
+            onPress={() => handleFilterTransaction("Completed" )}
+          >
+            <AppText
+              style={{
+                color: subTabActive === "Completed" ? "#309B36" : "#3B3B3B",
+              }}
+            >
+              Completed
+            </AppText>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.subTab,
+              {
+                backgroundColor:
+                  subTabActive === "Pending" ? "#C7F2C9" : "#F4F4F4",
+              },
+            ]}
+            onPress={() => handleFilterTransaction("Pending")}
+          >
+            <AppText
+              style={{
+                color: subTabActive === "Pending" ? "#309B36" : "#3B3B3B",
+              }}
+            >
+              Pending
+            </AppText>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.subTab,
+              {
+                backgroundColor:
+                  subTabActive === "Failed" ? "#C7F2C9" : "#F4F4F4",
+              },
+            ]}
+            onPress={() => handleFilterTransaction("Failed")}
+          >
+            <AppText
+              style={{
+                color: subTabActive === "Failed" ? "#309B36" : "#3B3B3B",
+              }}
+            >
+              Failed
+            </AppText>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.subTab,
+              {
+                backgroundColor:
+                  subTabActive === "Reverted" ? "#C7F2C9" : "#F4F4F4",
+              },
+            ]}
+            onPress={() => handleFilterTransaction("Reverted")}
+          >
+            <AppText
+              style={{
+                color: subTabActive === "Reverted" ? "#309B36" : "#3B3B3B",
+              }}
+            >
+              Reverted
+            </AppText>
+          </TouchableOpacity>
+        </View>: ""}
+        
         <ScrollView
           style={{ backgroundColor: colors.white }}
           contentContainerStyle={{ flexGrow: 1 }}
@@ -323,8 +519,8 @@ const Transactions = () => {
             }}
           >
             {activeTab === "deposit" ? (
-              depositTransactions?.length > 0 ? (
-                depositTransactions?.map((item) => (
+              filterDepositData?.length > 0 ? (
+                filterDepositData?.map((item) => (
                   <>
                     <FAQItem item={item} />
                     <View
@@ -345,9 +541,9 @@ const Transactions = () => {
                   No Transactions
                 </AppText>
               )
-            ) : activeTab === "lb" ? (
-              lobbyTransactions?.length > 0 ? (
-                lobbyTransactions?.map((item) => (
+            ) : activeTab === "leaderboard" ? (
+              leaderBoardTransactions?.length > 0 ? (
+                leaderBoardTransactions?.map((item) => (
                   <>
                     <View
                       style={{
@@ -412,7 +608,7 @@ const Transactions = () => {
                       </View>
 
                       <AppText type={SIXTEEN} weight={INTER_BOLD} color={BLACK}>
-                        ₹ {item?.amount}
+                        ₹ {item?.amount?.toFixed(2)}
                       </AppText>
                     </View>
                     <View
@@ -434,18 +630,24 @@ const Transactions = () => {
                 </AppText>
               )
             ) : activeTab === "withdraw" ? (
-              withdrawTransactions?.length > 0 ? (
-                withdrawTransactions?.map((item) => (
+              filterWithdrawData?.length > 0 ? (
+                filterWithdrawData?.map((item) => (
                   <>
-                    <View
+                    <TouchableOpacity
                       style={{
+                        // flexDirection: "row",
+                        // alignItems: "center",
+                        // justifyContent: "space-between",
+                        // margin: 20,
+                      }}
+                      onPress={() => handleWithdrawDetails("Withdraw Details", item)}
+                    >
+                      <View style={{
                         flexDirection: "row",
                         alignItems: "center",
                         justifyContent: "space-between",
                         margin: 20,
-                      }}
-                    >
-                      <View
+                      }}><View
                         style={{
                           flexDirection: "row",
                           justifyContent: "space-between",
@@ -471,17 +673,17 @@ const Transactions = () => {
                               styles.statusView,
                               {
                                 backgroundColor:
-                                  item?.status === "Success"
+                                  item?.status === "Completed"
                                     ? "#C7F2C9"
-                                    : "#CB2E2E33",
+                                    : item?.status === "Reverted" ? "#1355B624" : "#CB2E2E33",
                               },
                             ]}
                           >
                             <FastImage
                               source={
-                                item?.status === "Success"
+                                item?.status === "Completed"
                                   ? successVector
-                                  : failedVector
+                                  :  item?.status === "Reverted" ? revertedIcon :failedVector
                               }
                               resizeMode="contain"
                               style={{ width: 15, height: 15 }}
@@ -497,9 +699,9 @@ const Transactions = () => {
                               color:
                                 item?.status === "Pending"
                                   ? "#0187F5"
-                                  : item?.status === "Success"
+                                  : item?.status === "Completed"
                                   ? "#309B36"
-                                  : "#CB2E2E",
+                                  : item?.status === "Reverted" ? "#1355B6" : "#CB2E2E",
                             }}
                           >
                             {item?.status}
@@ -513,7 +715,10 @@ const Transactions = () => {
                               "MMMM Do YYYY, h:mm:ss a"
                             )}
                           </AppText>
+                          
                         </View>
+                        
+                        
                       </View>
                       <View style={{ alignItems: "center" }}>
                         <AppText
@@ -521,7 +726,7 @@ const Transactions = () => {
                           weight={INTER_BOLD}
                           color={BLACK}
                         >
-                          ₹ {item?.amount}
+                          ₹ {item?.amount?.toFixed(2)}
                         </AppText>
                         <AppText
                           type={FORTEEN}
@@ -530,8 +735,26 @@ const Transactions = () => {
                         >
                           {item?.withdrawalType}
                         </AppText>
-                      </View>
-                    </View>
+                        
+                      </View></View>
+                      
+                      {(item?.status === "Pending" && item?.withdrawalType === "Standard") && <SecondaryButton
+                title={"Revert"}
+                buttonStyle={{
+                  backgroundColor:
+                    "#1355B6",
+                  width: "50%",
+                  alignSelf: "center",
+                  height: 30,
+                  marginBottom: 5
+                  
+                }}
+                titleStyle={{ color: colors.white }}
+                onPress={() =>  handleRevertTransaction(item)}
+              />}
+                      
+                     
+                    </TouchableOpacity>
                     <View
                       style={{
                         height: 2,
@@ -614,7 +837,7 @@ const Transactions = () => {
                               color:
                                 item?.status === "Pending"
                                   ? "#0187F5"
-                                  :  item?.paymentType === "Credit"
+                                  : item?.paymentType === "Credit"
                                   ? "#309B36"
                                   : "#CB2E2E",
                             }}
@@ -630,7 +853,6 @@ const Transactions = () => {
                               "MMMM Do YYYY, h:mm:ss a"
                             )}
                           </AppText>
-                          
                         </View>
                       </View>
                       <View style={{ alignItems: "center" }}>
@@ -639,13 +861,9 @@ const Transactions = () => {
                           weight={INTER_BOLD}
                           color={BLACK}
                         >
-                          ₹ {item?.bonusAmount}
+                          ₹ {item?.bonusAmount?.toFixed(2)}
                         </AppText>
-                        <AppText
-                          type={TEN}
-                          weight={INTER_BOLD}
-                          color={GOLDEN}
-                        >
+                        <AppText type={TEN} weight={INTER_BOLD} color={GOLDEN}>
                           {item?.description}
                         </AppText>
                       </View>
@@ -670,8 +888,96 @@ const Transactions = () => {
               )
             ) : activeTab === "tds" ? (
               tdsTransaction?.length > 0 ? (
-                tdsTransaction?.map((item) => (
-                  item?.tdsAmount != 0 ?  <>
+                tdsTransaction?.map((item) =>
+                  item?.tdsAmount != 0 ? (
+                    <>
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          margin: 20,
+                        }}
+                      >
+                        <View
+                          style={{
+                            // flexDirection: "row",
+                            justifyContent: "space-between",
+                            gap: 10,
+                          }}
+                        >
+                          <View>
+                            <View style={{ flexDirection: "row", gap: 5 }}>
+                              <AppText
+                                type={TWELVE}
+                                weight={INTER_SEMI_BOLD}
+                                style={{ color: "#797979CC" }}
+                              >
+                                TDS Amount: -
+                              </AppText>
+                              <AppText
+                                type={FIFTEEN}
+                                weight={INTER_SEMI_BOLD}
+                                color={BLACK}
+                              >
+                                ₹{item?.tdsAmount?.toFixed(2)}
+                              </AppText>
+                            </View>
+                          </View>
+                          <View>
+                            <AppText
+                              type={ELEVEN}
+                              weight={INTER_SEMI_BOLD}
+                              style={{ color: "#797979CC" }}
+                            >
+                              {moment(item?.createdAt).format(
+                                "MMMM Do YYYY, h:mm:ss a"
+                              )}
+                            </AppText>
+                          </View>
+                        </View>
+                        <View style={{ flexDirection: "row", gap: 5 }}>
+                          <AppText
+                            type={TWELVE}
+                            weight={INTER_SEMI_BOLD}
+                            style={{ color: "#797979CC" }}
+                          >
+                            Total Amount: -
+                          </AppText>
+                          <AppText
+                            type={SIXTEEN}
+                            weight={INTER_BOLD}
+                            color={BLACK}
+                          >
+                            ₹ {item?.amount?.toFixed(2)}
+                          </AppText>
+                        </View>
+                      </View>
+                      <View
+                        style={{
+                          height: 2,
+                          width: "100%",
+                          backgroundColor: "#F2F2F2",
+                        }}
+                      ></View>
+                    </>
+                  ) : (
+                    ""
+                  )
+                )
+              ) : (
+                <AppText
+                  color={BLACK}
+                  type={FORTEEN}
+                  style={{ alignSelf: "center", marginTop: 30 }}
+                >
+                  No Transactions
+                </AppText>
+              )
+            ) : activeTab === "game" ? (
+              lobbyTransactions?.length > 0 ? (
+                lobbyTransactions?.map((item) => (
+                  <>
                     <View
                       style={{
                         flexDirection: "row",
@@ -682,20 +988,46 @@ const Transactions = () => {
                     >
                       <View
                         style={{
-                          // flexDirection: "row",
+                          flexDirection: "row",
                           justifyContent: "space-between",
                           gap: 10,
                         }}
                       >
-                          <View>
-                        <View style={{flexDirection: "row", gap: 5}}>
-                        <AppText type={TWELVE}
-                            weight={INTER_SEMI_BOLD} style={{color: "#797979CC"}}>TDS Amount: -</AppText>
-                          <AppText type={FIFTEEN}
-                            weight={INTER_SEMI_BOLD} color={BLACK}>₹{item?.tdsAmount}</AppText>
+                        <View
+                          style={[
+                            styles.statusView,
+                            {
+                              backgroundColor:
+                                item?.paymentType === "Credit"
+                                  ? "#C7F2C9"
+                                  : "#CB2E2E33",
+                            },
+                          ]}
+                        >
+                          <FastImage
+                            source={
+                              item?.paymentType === "Credit"
+                                ? successVector
+                                : failedVector
+                            }
+                            resizeMode="contain"
+                            style={{ width: 15, height: 15 }}
+                          />
                         </View>
-                        </View>
+
                         <View>
+                          <AppText
+                            type={FIFTEEN}
+                            weight={INTER_SEMI_BOLD}
+                            style={{
+                              color:
+                                item?.paymentType === "Credit"
+                                  ? "#309B36"
+                                  : "#CB2E2E",
+                            }}
+                          >
+                            {item?.paymentType}
+                          </AppText>
                           <AppText
                             type={ELEVEN}
                             weight={INTER_SEMI_BOLD}
@@ -705,19 +1037,12 @@ const Transactions = () => {
                               "MMMM Do YYYY, h:mm:ss a"
                             )}
                           </AppText>
-                          
                         </View>
-                        </View>
-                      <View style={{flexDirection: "row", gap: 5}}>
-                      <AppText type={TWELVE}
-                            weight={INTER_SEMI_BOLD} style={{color: "#797979CC"}}>
-                        Total Amount: -
-                      </AppText>
-                      <AppText type={SIXTEEN} weight={INTER_BOLD} color={BLACK}>
-                        ₹ {item?.amount}
-                      </AppText>
                       </View>
-                      
+
+                      <AppText type={SIXTEEN} weight={INTER_BOLD} color={BLACK}>
+                        ₹ {item?.amount?.toFixed(2)}
+                      </AppText>
                     </View>
                     <View
                       style={{
@@ -726,8 +1051,7 @@ const Transactions = () => {
                         backgroundColor: "#F2F2F2",
                       }}
                     ></View>
-                  </>: ""
-                 
+                  </>
                 ))
               ) : (
                 <AppText
@@ -738,10 +1062,58 @@ const Transactions = () => {
                   No Transactions
                 </AppText>
               )
-            ) : ("")}
+            ) : (
+              ""
+            )}
           </View>
         </ScrollView>
       </View>
+      <RBSheet
+        ref={refRBSheetDetails}
+        closeOnDragDown={true}
+        height={520}
+        customStyles={{
+          container: {
+            backgroundColor: colors.white,
+            borderTopLeftRadius: 40,
+            borderTopRightRadius: 40,
+            // paddingHorizontal: universalPaddingHorizontal,
+          },
+          draggableIcon: {
+            backgroundColor: "transparent",
+            display: "none",
+          },
+        }}
+      >
+        <TransactionDetails
+          title={title}
+          onClose={handleCloseDetails}
+          details={details}
+        />
+      </RBSheet>
+      <RBSheet
+        ref={refRBSheetWithdrawDetails}
+        closeOnDragDown={true}
+        height={520}
+        customStyles={{
+          container: {
+            backgroundColor: colors.white,
+            borderTopLeftRadius: 40,
+            borderTopRightRadius: 40,
+            // paddingHorizontal: universalPaddingHorizontal,
+          },
+          draggableIcon: {
+            backgroundColor: "transparent",
+            display: "none",
+          },
+        }}
+      >
+        <WithdrawDetails
+          title={title}
+          onClose={handleCloseDetails}
+          details={details}
+        />
+      </RBSheet>
     </AppSafeAreaView>
   );
 };

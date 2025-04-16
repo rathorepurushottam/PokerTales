@@ -65,6 +65,10 @@ const Login = () => {
     return state.auth.locationAccess;
   });
 
+  const banStates = useSelector((state) => {
+    return state.profile.banStates;
+  });
+
   const handleOpenForgot = () => {
     refRBSheetLogin?.current?.close();
     refRBSheetForgot?.current?.open();
@@ -90,7 +94,7 @@ const Login = () => {
     refRBSheetOTP?.current?.open();
   };
 
-  console.log(locationAccess, "locationAccess");
+  console.log(banStates, "banStates");
 
   const handleOTP = () => {
     if (locationAccess !== 'granted') {

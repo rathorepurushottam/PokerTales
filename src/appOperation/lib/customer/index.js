@@ -10,6 +10,8 @@ export default (appOperation) => ({
     appOperation.post(`wallet/create-wallet?user=${id}`, {}, CUSTOMER_TYPE),
   getKycDetails: () =>
     appOperation.get(`kyc/get-kyc`, undefined, undefined, CUSTOMER_TYPE),
+  get_ban_state: () =>
+    appOperation.get(`kyc/banStates`, undefined, undefined, CUSTOMER_TYPE),
   get_transactions: () =>
     appOperation.get(`transactions`, undefined, undefined, CUSTOMER_TYPE),
   get_tds_transactions: () =>
@@ -249,4 +251,8 @@ export default (appOperation) => ({
     appOperation.get(`payment/user-banks`, undefined, undefined, CUSTOMER_TYPE),
   user_withdrawal: (data) =>
     appOperation.post(`payment/create-payout`, data, CUSTOMER_TYPE),
+  user_standard_withdrawal: (data) =>
+    appOperation.post(`wallet/manual-withdrawal`, data, CUSTOMER_TYPE),
+  revert_transaction: (data) =>
+    appOperation.put(`wallet/revert-manual-withdrawal`, data, CUSTOMER_TYPE),
 });

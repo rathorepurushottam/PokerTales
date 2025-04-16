@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import {
   AppText,
   BLACK,
@@ -260,11 +260,81 @@ const ResponsibleGaming = ({ setDesc, setIsOpen, onCloseGaming }) => {
             <View
               style={{
                 flexDirection: "row",
-                justifyContent: "space-evenly",
+                // justifyContent: "space-evenly",
                 marginTop: 20,
+                // flex: 1
               }}
             >
-              <View style={styles.timeView}>
+              <ScrollView style={styles.timeView}>
+                <TouchableOpacity
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: 10,
+                  }}
+                  onPress={() => setTimeLimit(24)}
+                >
+                  <AppText color={MENUTEXT} type={THIRTEEN}>
+                   24 Hours
+                  </AppText>
+                  <RadioButton selected={timeLimit === 1} />
+                </TouchableOpacity>
+                <View
+                  style={{
+                    height: 1,
+                    backgroundColor: colors.menuText,
+                    width: "100%",
+                    opacity: 0.1,
+                    marginVertical: 5,
+                  }}
+                ></View>
+                <TouchableOpacity
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: 10,
+                  }}
+                  onPress={() => setTimeLimit(48)}
+                >
+                  <AppText color={MENUTEXT} type={THIRTEEN}>
+                  48 Hours
+                  </AppText>
+                  <RadioButton selected={timeLimit === 2} />
+                </TouchableOpacity>
+                <View
+                  style={{
+                    height: 1,
+                    backgroundColor: colors.menuText,
+                    width: "100%",
+                    opacity: 0.1,
+                    marginVertical: 5,
+                  }}
+                ></View>
+                <TouchableOpacity
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: 10,
+                  }}
+                  onPress={() => setTimeLimit(72)}
+                >
+                  <AppText color={MENUTEXT} type={THIRTEEN}>
+                  72 Hours
+                  </AppText>
+                  <RadioButton selected={timeLimit === 4} />
+                </TouchableOpacity>
+                <View
+                  style={{
+                    height: 1,
+                    backgroundColor: colors.menuText,
+                    width: "100%",
+                    opacity: 0.1,
+                    marginVertical: 5,
+                  }}
+                ></View>
                 <TouchableOpacity
                   style={{
                     flexDirection: "row",
@@ -275,9 +345,9 @@ const ResponsibleGaming = ({ setDesc, setIsOpen, onCloseGaming }) => {
                   onPress={() => setTimeLimit(1)}
                 >
                   <AppText color={MENUTEXT} type={THIRTEEN}>
-                    60 minutes
+                    1 Week
                   </AppText>
-                  <RadioButton selected={timeLimit === 1} />
+                  <RadioButton selected={timeLimit === 6} />
                 </TouchableOpacity>
                 <View
                   style={{
@@ -298,9 +368,9 @@ const ResponsibleGaming = ({ setDesc, setIsOpen, onCloseGaming }) => {
                   onPress={() => setTimeLimit(2)}
                 >
                   <AppText color={MENUTEXT} type={THIRTEEN}>
-                    2 Hours
+                    2 Week
                   </AppText>
-                  <RadioButton selected={timeLimit === 2} />
+                  <RadioButton selected={timeLimit === 6} />
                 </TouchableOpacity>
                 <View
                   style={{
@@ -317,11 +387,12 @@ const ResponsibleGaming = ({ setDesc, setIsOpen, onCloseGaming }) => {
                     justifyContent: "space-between",
                     alignItems: "center",
                     padding: 10,
+                    marginBottom: 10
                   }}
                   onPress={() => setTimeLimit(4)}
                 >
                   <AppText color={MENUTEXT} type={THIRTEEN}>
-                    4 Hours
+                    1 Month
                   </AppText>
                   <RadioButton selected={timeLimit === 4} />
                 </TouchableOpacity>
@@ -334,21 +405,7 @@ const ResponsibleGaming = ({ setDesc, setIsOpen, onCloseGaming }) => {
                     marginVertical: 5,
                   }}
                 ></View>
-                <TouchableOpacity
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    padding: 10,
-                  }}
-                  onPress={() => setTimeLimit(6)}
-                >
-                  <AppText color={MENUTEXT} type={THIRTEEN}>
-                    6 Hours
-                  </AppText>
-                  <RadioButton selected={timeLimit === 6} />
-                </TouchableOpacity>
-              </View>
+              </ScrollView>
             </View>
             {error && (
         <AppText
@@ -449,5 +506,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     width: "90%",
     padding: 10,
+    height: "70%",
   },
 });

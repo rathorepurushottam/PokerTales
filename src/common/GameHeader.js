@@ -46,6 +46,7 @@ import { BOTTOM_NAVIGATION_STACK, BOTTOM_TAB_WALLET_SCREEN, CASHIER_SCREEN } fro
 const GameHeader = ({
   handleAddCash = () => {},
   title,
+  onNavigationToApp = () => {}
 }) => {
   const [random, setRandom] = useState("");
   const userData = useSelector((state) => {
@@ -66,9 +67,7 @@ const GameHeader = ({
       >
         <TouchableOpacity
           style={styles.arrowview}
-          onPress={() => {
-            NavigationService.goBack();
-          }}
+          onPress={onNavigationToApp}
         >
           <FastImage
             style={styles.arrowIcon}

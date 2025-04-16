@@ -11,7 +11,7 @@ import { splash } from '../helper/image';
 import { Screen } from '../theme/dimens';
 import { AUTHSTACK } from '../navigation/routes';
 import { useDispatch, useSelector } from 'react-redux';
-import { getUserProfile } from '../actions/profileAction';
+import { getBanStates, getUserProfile } from '../actions/profileAction';
 import { SpinnerSecond } from '../common/SnipperSecond';
 import { setLocationAcces } from '../slices/authSlice';
 
@@ -23,6 +23,7 @@ const AuthLoading = () => {
     useEffect(() => {
         setTimeout(() => {
             dispatch(getUserProfile());
+            dispatch(getBanStates());
         }, 3000);
     }, []);
 

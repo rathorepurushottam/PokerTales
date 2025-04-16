@@ -517,7 +517,7 @@ const CustomDrawer = () => {
       <RBSheet
         ref={refRBSheetGaming}
         closeOnDragDown={true}
-        height={750}
+        height={780}
         customStyles={{
           container: {
             backgroundColor: colors.white,

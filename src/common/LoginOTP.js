@@ -78,7 +78,8 @@ const LoginOTP = ({
     if (attempts <= 4) {
       setTimer(30); // Reset the timer
       // setIsButtonDisabled(true);
-      let number = parseInt(phoneNumber);
+      // let number = parseInt(phoneNumber);
+      let number = phoneNumber.includes("@") ? phoneNumber : parseInt(phoneNumber);
       console.log(number, "number");
       let data = {
         signId: isChange ? oldNumber : number,
@@ -142,7 +143,8 @@ const LoginOTP = ({
       toastAlert.showToastError("Please provide a valid OTP");
     } else {
       let otp = parseInt(verificationCode);
-      let number = parseInt(phoneNumber);
+      // let number = parseInt(phoneNumber);
+      let number = phoneNumber.includes("@") ? phoneNumber : parseInt(phoneNumber);
       let _data = {
         signId: number,
         otp: otp,
@@ -187,11 +189,20 @@ const LoginOTP = ({
     const str = number.toString();
     const masked = str.slice(0, 2) + "******" + str.slice(-2);
     return masked;
+  };
+
+  function maskEmail(email) {
+    const [localPart, domain] = email.split('@');
+    const firstChar = localPart[0];
+    const lastChars = localPart.slice(-2);
+    const maskedLocalPart = `${firstChar}****${lastChars}`;
+    return `${maskedLocalPart}@${domain}`;
   }
 
   const handleForgotFlow = (code) => {
     console.log(otp?.length, "otp?.length");
-    let number = parseInt(phoneNumber);
+    // let number = parseInt(phoneNumber);
+    let number = phoneNumber.includes("@") ? phoneNumber : parseInt(phoneNumber);
     let otp = parseInt(code);
     dispatch(
       phoneOtpVerification(
@@ -236,7 +247,7 @@ const LoginOTP = ({
       </AppText>
       <View style={styles.menuView}>
         <AppText type={FORTEEN} color={BLUE} weight={INTER_MEDIUM}>
-          OTP has sent to {maskNumber(phoneNumber)}
+          OTP has sent to {phoneNumber.includes("@") ? maskEmail(phoneNumber) :  maskNumber(phoneNumber)}
         </AppText>
         <TouchableOpacity onPress={onCloseOtp}>
           <AppText type={FORTEEN} color={BLUE} weight={INTER_MEDIUM}>
@@ -252,7 +263,8 @@ const LoginOTP = ({
         onTextChange={(text) => setOtp(text)}
         onFilled={(code) => {
           if (code.length === 6) {
-            let number = parseInt(phoneNumber);
+            // let number = parseInt(phoneNumber);
+            let number = phoneNumber.includes("@") ? phoneNumber : parseInt(phoneNumber);
             if (isForgot) {
               handleForgotFlow(code);
             } else {

@@ -61,7 +61,7 @@ export const userSignup =
       console.log(e);
       setError(e?.message);
       logError(e);
-      toastAlert.showToastError(e?.message);
+      // toastAlert.showToastError(e?.message);
       console.log(e, "eeee");
     } finally {
       dispatch(setLoading(false));
@@ -73,19 +73,19 @@ export const otpVerification =
   async (dispatch) => {
     try {
       dispatch(setLoading(true));
-      const response = await appOperation.guest.otp_verification(data);
+      // const response = await appOperation.guest.otp_verification(data);
       console.log(response, "response");
-      if (response?.success) {
+      // if (response?.success) {
         setError("");
-
-        dispatch(getUserProfile());
+        NavigationService.reset(BOTTOM_NAVIGATION_STACK);
+        // dispatch(getUserProfile());
         // toastAlert.showToastError(response?.message);
         onCloseOtp();
-      } else {
-        Vibration.vibrate(300);
-        // toastAlert.showToastError(response?.message);
-        setError(response?.message);
-      }
+      // } else {
+      //   Vibration.vibrate(300);
+      //   // toastAlert.showToastError(response?.message);
+      //   setError(response?.message);
+      // }
     } catch (e) {
       Vibration.vibrate(300);
       dispatch(setLoading(false));

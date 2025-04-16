@@ -332,7 +332,7 @@ const BottomMainTab = () => {
                 weight={INTER_MEDIUM}
                 type={TEN}
               >
-                Cashier
+                Wallet
               </AppText>
             </View>
           ),

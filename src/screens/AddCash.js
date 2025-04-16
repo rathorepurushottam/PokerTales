@@ -99,6 +99,8 @@ const AddCash = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [depositError, setDepositError] = useState('');
+  const [gstAmount, setGstAmount] = useState({});
+  const [netAmount, setNetAmount] = useState('');
 
   const paymentLink = useSelector((state) => {
     return state.profile.paymentLink;
@@ -124,15 +126,31 @@ const AddCash = () => {
   const depositOffers = useSelector((state) => {
     return state.profile.depositOffers;
   });
-  let depositType = paymentType?.paymenGateway;
+  console.log(codeAmount, "codeAMiunt");
   const data = [
     { id: "1", rupay: "100" },
     { id: "2", rupay: "250" },
     { id: "3", rupay: "500" },
     { id: "4", rupay: "1000" },
   ];
-  let tdsamount = parseFloat((parseInt(amount) / 128) * 28).toFixed(2);
-  let amounttoadd = amount + (codeAmount && parseInt(codeAmount));
+
+  function calculateInclusiveTax(pay) {
+    const gstPercentage = paymentType.sgst + paymentType.cgst;
+        const factor = 1 + gstPercentage / 100;
+
+    // Calculate base amount and GST
+    const baseAmount = (pay / factor).toFixed(2);
+    const sgstAmount = (baseAmount * paymentType.sgst / 100).toFixed(2);
+    const cgstAmount = (baseAmount * paymentType.cgst / 100).toFixed(2);
+    const totalGstAmount = (parseFloat(sgstAmount) + parseFloat(cgstAmount)).toFixed(2);
+    const depositFees = pay * paymentType.depositFee / 100;
+
+    const netAmount = pay - depositFees;
+    return {
+        basePrice: netAmount,
+        taxAmount: totalGstAmount
+    };
+}
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -155,7 +173,7 @@ const AddCash = () => {
     const handleAppStateChange = (nextAppState) => {
       if (appState.match(/inactive|background/) && nextAppState === "active") {
         rbsheetPayLink?.current?.close();
-        depositType === "phonePe"
+        paymentType?.paymenGateway === "phonePe"
           ? dispatch(
               getPaymentState(
                 paymentDetails?.merchantOrderId,
@@ -188,7 +206,7 @@ const AddCash = () => {
       amount: pay,
     };
     getUPIAppsInstalled();
-    depositType === "phonePe"
+    paymentType?.paymenGateway === "phonePe"
       ? dispatch(getPaymentLink(data, handlePaymetOption, setIsOpenn, setDepositError))
       : dispatch(getPaymentInit(data, handlePaymetOption, setIsOpenn, setDepositError));
   };
@@ -255,7 +273,7 @@ const AddCash = () => {
 
   const handleApplyDepositOffer = (code) => {
     setDepositCode(code?.code);
-    setCodeAmount(code?.bonus);
+    setCodeAmount(parseInt(code?.bonus));
     setCodeApplied(true);
     setIsOpen(true);
     rbsheetOffers.current.close();
@@ -265,7 +283,7 @@ const AddCash = () => {
     let validate = depositOffers?.filter((value) => value.code === depositCode);
     console.log(validate, "validate");
     if (validate?.length === 1) {
-      setCodeAmount(validate[0]?.bonus);
+      setCodeAmount(parseInt(validate[0]?.bonus));
       setCodeApplied(true);
       setIsOpen(true);
       rbsheetOffers.current.close();
@@ -288,6 +306,8 @@ const AddCash = () => {
     } else {
       setError("");
     }
+    const result = calculateInclusiveTax(pay);
+    setGstAmount(result);
   };
 
   // console.log(paymentDetails, "paymentDetails");
@@ -348,6 +368,13 @@ const AddCash = () => {
         console.log("error:" + error, "last");
       });
   };
+
+  const suggestValue = (value) => {
+    let pay = parseInt(value);
+    setAmount(value);
+    const result = calculateInclusiveTax(pay);
+    setGstAmount(result);
+  }
 
   return (
     <AppSafeAreaView statusColor={"#032146"}>
@@ -425,7 +452,7 @@ const AddCash = () => {
               {data?.map((item) => {
                 return (
                   <TouchableOpacity
-                    onPress={() => setAmount(item.rupay)}
+                    onPress={() => suggestValue(item.rupay)}
                     style={
                       amount === item?.rupay
                         ? styles.rsSelectContainer
@@ -493,7 +520,8 @@ const AddCash = () => {
                   GST Applicable @28%
                 </AppText>
                 <AppText type={TWELVE} color={RED}>
-                  {"(-)"} ₹ {parseFloat(tdsamount)?.toFixed(2)}
+                  {/* {"(-)"} ₹ {parseFloat(tdsamount)?.toFixed(2)} */}
+                  {"(-)"} ₹ {gstAmount?.taxAmount}
                 </AppText>
               </View>
               <View
@@ -509,7 +537,8 @@ const AddCash = () => {
                   Instant Bonus
                 </AppText>
                 <AppText type={TWELVE} color={GREEN}>
-                  {"(+)"} ₹ {parseFloat(tdsamount)?.toFixed(2)}
+                  {/* {"(+)"} ₹ {parseFloat(tdsamount)?.toFixed(2)} */}
+                  {"(+)"} ₹ {gstAmount?.taxAmount}
                 </AppText>
               </View>
               <View
@@ -524,8 +553,8 @@ const AddCash = () => {
                 <AppText type={TWELVE} color={BLACK}>
                   Processing Fee
                 </AppText>
-                <AppText type={TWELVE} color={GREEN}>
-                  FREE
+                <AppText type={TWELVE} color={RED}>
+                  {paymentType.depositFee}%
                 </AppText>
               </View>
               {codeAmount && (
@@ -563,7 +592,8 @@ const AddCash = () => {
                   Total Deposit Balance:
                 </AppText>
                 <AppText type={EIGHTEEN} color={BLACK}>
-                  ₹ {parseFloat(amounttoadd)?.toFixed(2)}
+                  {/* ₹ {!codeAmount ? parseFloat(amount)?.toFixed(2) :  (parseFloat(amount)+codeAmount)?.toFixed(2)} */}
+                  ₹  {!codeAmount ? gstAmount?.basePrice : gstAmount?.basePrice + codeAmount}
                 </AppText>
               </View>
             </View>
@@ -656,7 +686,7 @@ const AddCash = () => {
               type={TEN}
               color={MENUTEXT}
               weight={INTER_BOLD}
-              style={{ marginBottom: 10 }}
+              style={{ marginBottom: 10, alignSelf: "center" }}
               onPress={() => NavigationService.navigate(TERMS_OF_USE_SCREEN)}
             >
               I accept{" "}
@@ -750,7 +780,7 @@ const AddCash = () => {
             </AppText>
           </TouchableOpacity>
           <View style={{ paddingHorizontal: 10 }}>
-            {depositType !== "phonePe"
+            {paymentType?.paymenGateway !== "phonePe"
               ? paymentApp?.map((item) => {
                   return (
                     <Pressable
@@ -837,7 +867,7 @@ const AddCash = () => {
                 paymentSandBoxStatus?.message === "Payment successfull" ||
                 paymentStatus?.transaction?.status === "Confirmed"
                   ? successfullIcon
-                  : paymentStatus === "Pending"
+                  : paymentStatus?.transaction?.status === "Pending"
                   ? pendingIcon
                   : rejectedIcon
               }

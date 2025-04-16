@@ -50,6 +50,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   getPaymentType,
   getUserPaymentMode,
+  userStandardWithdrawal,
   userWithdrawal,
 } from "../actions/profileAction";
 import Checkbox from "../common/CheckBox";
@@ -66,7 +67,7 @@ const Withdrawal = () => {
   const refRBSheetTaxable = useRef();
   const refRBSheetPayStatus = useRef();
   const [withdrawType, setWithdrawType] = useState("standard");
-  const [amount, setAmount] = useState('');
+  const [amount, setAmount] = useState("");
   const [amountFocus, setAmountFocus] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [error, setError] = useState("");
@@ -81,6 +82,10 @@ const Withdrawal = () => {
 
   const kycDetails = useSelector((state) => {
     return state.profile.kycDetails;
+  });
+
+  const paymentType = useSelector((state) => {
+    return state.profile.paymentType;
   });
 
   const userWallet = useSelector((state) => {
@@ -104,7 +109,7 @@ const Withdrawal = () => {
   });
 
   const tdsPaid = useSelector((state) => {
-    return state.profile.tdsPaid
+    return state.profile.tdsPaid;
   });
 
   const withdrawalFee = useSelector((state) => {
@@ -136,16 +141,26 @@ const Withdrawal = () => {
         );
         return;
       }
-    };
-    setError('');
-    
+    }
+    setError("");
+
     let data = {
       amount: amount,
       fundAccountId: paymentMethod?.fundAccountId,
       accountType: paymentMethod?.upiId ? "vpa" : "bank_account",
       withdrawalType: withdrawType === "standard" ? "Standard" : "Instant",
     };
-    dispatch(userWithdrawal(data, handleShowWithdrawStatus));
+
+    let data2 = {
+      amount: amount,
+      bankDetails: paymentMethod
+    };
+
+    {
+      withdrawType === "standard"
+        ? dispatch(userStandardWithdrawal(data2, handleShowWithdrawStatus))
+        : dispatch(userWithdrawal(data, handleShowWithdrawStatus));
+    }
   };
 
   const handleValidAmount = (value) => {
@@ -169,22 +184,50 @@ const Withdrawal = () => {
   };
 
   const handleCalculateTds = (pay) => {
-    const tdsless =
-      userWallet?.totalDepositedBalance - userWallet?.totalWithdrawnAmount + tdsPaid;
-    let tds;
-    let charges =
-      withdrawType === "instant" ? pay * (withdrawalFee / 100) : 0;
-    if (pay < tdsless) {
-      tds = 0;
-    } else {
-      tds = 30;
-    }
-    const factor = 1 + tds / 100;
-    const baseAmount = Math.round(pay / factor) - charges;
-    const tdsAmount = baseAmount * (tds / 100);
-    setTdsAmount(tdsAmount);
-    setBaseAmount(baseAmount);
-    setCharges(charges);
+    const tdsLess = userWallet.totalWithdrawnAmount - userWallet.totalDepositedBalance;
+        const tds = tdsLess > 0 ? paymentType?.tds : 0;
+        const finalTds = tds;
+        const finalTdsAmount = (tdsLess * (finalTds / 100)) - tdsPaid;
+        setTdsAmount(finalTdsAmount);
+        let charges = withdrawType === "instant" ? pay * (withdrawalFee / 100) : 0;
+        setCharges(charges);
+        const netAmount = pay - finalTdsAmount - charges;
+        setBaseAmount(netAmount);
+        
+    // const tdsless =
+    //   userWallet?.totalDepositedBalance -
+    //   userWallet?.totalWithdrawnAmount +
+    //   tdsPaid;
+    // let tds;
+    // let tdsPaid = 0;
+    
+    // console.log(pay, "pay");
+    console.log(tdsPaid, "tdsPaid");
+    // let tdsLess = userWallet.totalDepositedBalance - userWallet.totalWithdrawnAmount;
+    // console.log(tdsLess, "tdsLess");
+    //     let tds = tdsLess > 0 ? 30 : 0;
+    //     console.log(tds, "tds");
+    //     const finalTdsAmount = pay * (tds / 100);
+    //     console.log(finalTdsAmount, "finalTdsAmount");
+    //     const finalTds = pay - finalTdsAmount - tdsPaid;
+    //     console.log(finalTds, "finalTds");
+    //     setTdsAmount(finalTds)
+    //     const baseAmount = (finalTds) - charges;
+    // console.log(baseAmount, "baseAmount");
+        
+    // let charges = withdrawType === "instant" ? pay * (withdrawalFee / 100) : 0;
+    // if (pay < tdsLess) {
+    //   tds = 0;
+    // } else {
+    //   tds = 30;
+    // }
+    // const factor = 1 + tds / 100;
+    // const baseAmount = Math.round(pay / factor) - charges;
+   
+    // const tdsAmount = baseAmount * (tds / 100);
+    // setTdsAmount(tdsAmount);
+    // setBaseAmount(baseAmount -  finalTdsAmount);
+   
   };
 
   const handleWithdrawType = (type) => {
@@ -192,7 +235,7 @@ const Withdrawal = () => {
     setTdsAmount(0);
     setBaseAmount(0);
     setCharges(0);
-    setAmount('');
+    setAmount("");
   };
 
   // console.log(userBank, "userBank");
@@ -374,9 +417,11 @@ const Withdrawal = () => {
                 {error}
               </AppText>
             )}
-            {(withdrawType === 'standard' && !error && amount) && (
+            {withdrawType === "standard" && !error && amount && (
               <AppText type={TWELVE} color={RED} style={{ marginTop: 5 }}>
-                {'TDS will be calculated based on your ledger at the time of processing'}
+                {
+                  "TDS will be calculated based on your ledger at the time of processing"
+                }
               </AppText>
             )}
           </View>
@@ -413,11 +458,15 @@ const Withdrawal = () => {
                     resizeMode="contain"
                   />
                 </TouchableOpacity>
-                {withdrawType === 'standard' ? <AppText type={TWELVE} color={RED}>To be calucated</AppText> :  <AppText type={TWELVE} color={RED}>
-                  (-) ₹ {tdsAmount?.toFixed(2)}
-                </AppText>}
-
-               
+                {withdrawType === "standard" ? (
+                  <AppText type={TWELVE} color={RED}>
+                    To be calucated
+                  </AppText>
+                ) : (
+                  <AppText type={TWELVE} color={RED}>
+                    (-) ₹ {tdsAmount?.toFixed(2)}
+                  </AppText>
+                )}
               </View>
               <View
                 style={{
@@ -438,7 +487,7 @@ const Withdrawal = () => {
                       <AppText type={TWELVE} color={BLACK}>
                         {withdrawType === "standard"
                           ? "Standard withdrawal Processing fee is free"
-                          : "Instanst withdrawal Processing fee is 2.25%"}
+                          : `Instanst withdrawal Processing fee is ${withdrawalFee}%`}
                       </AppText>
                     }
                     placement="top"
@@ -555,140 +604,140 @@ const Withdrawal = () => {
                   Add New
                 </AppText>
               </View>
-              {userUPI?.length > 0 ? (
-                userUPI.map((item) => (<TouchableOpacity
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    borderTopWidth: 1,
-                    borderTopColor: "#E4E4E4",
-                    padding: 10,
-                  }}
-                  onPress={() => setPaymentMethod(item)}
-                >
-                  <View style={{ flexDirection: "row", alignItems: "center" }}>
-                    <AppText color={BLACK}>{item?.upiId}</AppText>
-                    <FastImage
-                      source={successfullIcon}
-                      resizeMode="contain"
-                      style={{ width: 12, height: 12, marginLeft: 5 }}
-                    />
-                  </View>
-                  <View
-                    style={[
-                      paymentMethod?.upiId === item?.upiId &&
-                        styles.selectedMethod,
-                    ]}
-                  >
-                    <RadioButton
-                      selected={paymentMethod?.upiId === item?.upiId}
-                      style={{ marginRight: 5 }}
-                    />
-                  </View>
-                </TouchableOpacity>))
-                
-              ) : (
-                ""
-              )}
+              {userUPI?.length > 0
+                ? userUPI.map((item) => (
+                    <TouchableOpacity
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        borderTopWidth: 1,
+                        borderTopColor: "#E4E4E4",
+                        padding: 10,
+                      }}
+                      onPress={() => setPaymentMethod(item)}
+                    >
+                      <View
+                        style={{ flexDirection: "row", alignItems: "center" }}
+                      >
+                        <AppText color={BLACK}>{item?.upiId}</AppText>
+                        <FastImage
+                          source={successfullIcon}
+                          resizeMode="contain"
+                          style={{ width: 12, height: 12, marginLeft: 5 }}
+                        />
+                      </View>
+                      <View
+                        style={[
+                          paymentMethod?.upiId === item?.upiId &&
+                            styles.selectedMethod,
+                        ]}
+                      >
+                        <RadioButton
+                          selected={paymentMethod?.upiId === item?.upiId}
+                          style={{ marginRight: 5 }}
+                        />
+                      </View>
+                    </TouchableOpacity>
+                  ))
+                : ""}
             </View>
             <View
               style={{
                 borderWidth: 1,
                 borderColor: "#E4E4E4",
                 borderRadius: 13,
-                marginTop: 10
-              }}
-            >
-               <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-                // marginTop: 10,
+                marginTop: 10,
               }}
             >
               <View
-                 style={{
+                style={{
                   flexDirection: "row",
-                  paddingVertical: 10,
-                  marginLeft: 10,
+                  justifyContent: "space-between",
                   alignItems: "center",
-                  justifyContent: "center",
+                  // marginTop: 10,
                 }}
               >
                 <View
                   style={{
-                    width: 40,
-                    height: 40,
-                    backgroundColor: "#F3DD97",
-                    borderRadius: 20,
+                    flexDirection: "row",
+                    paddingVertical: 10,
+                    marginLeft: 10,
                     alignItems: "center",
                     justifyContent: "center",
                   }}
                 >
-                  <FastImage
-                    source={bankIcon}
-                    style={{ width: 20, height: 20 }}
-                    resizeMode="contain"
-                  />
+                  <View
+                    style={{
+                      width: 40,
+                      height: 40,
+                      backgroundColor: "#F3DD97",
+                      borderRadius: 20,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <FastImage
+                      source={bankIcon}
+                      style={{ width: 20, height: 20 }}
+                      resizeMode="contain"
+                    />
+                  </View>
+                  <AppText
+                    type={SIXTEEN}
+                    weight={INTER_MEDIUM}
+                    color={BLACK}
+                    style={{ marginLeft: 12 }}
+                  >
+                    Bank Account
+                  </AppText>
                 </View>
+
                 <AppText
-                  type={SIXTEEN}
+                  type={FIFTEEN}
                   weight={INTER_MEDIUM}
-                  color={BLACK}
-                  style={{ marginLeft: 12 }}
+                  style={{ marginRight: 15, color: "#0F65F8" }}
+                  onPress={() => refRBSheetBank.current.open()}
                 >
-                  Bank Account
+                  Add New
                 </AppText>
               </View>
-
-              <AppText
-                type={FIFTEEN}
-                weight={INTER_MEDIUM}
-                style={{ marginRight: 15, color: "#0F65F8" }}
-                onPress={() => refRBSheetBank.current.open()}
-              >
-                Add New
-              </AppText>
-              
+              {userBank?.length > 0
+                ? userBank.map((item) => (
+                    <TouchableOpacity
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        borderTopWidth: 1,
+                        borderTopColor: "#E4E4E4",
+                        padding: 10,
+                      }}
+                      onPress={() => setPaymentMethod(item)}
+                    >
+                      <View
+                        style={{ flexDirection: "row", alignItems: "center" }}
+                      >
+                        <AppText color={BLACK}>{item?.bankName}</AppText>
+                        <FastImage
+                          source={successfullIcon}
+                          resizeMode="contain"
+                          style={{ width: 12, height: 12, marginLeft: 5 }}
+                        />
+                      </View>
+                      <View
+                        style={[
+                          paymentMethod?.bankName === item?.bankName &&
+                            styles.selectedMethod,
+                        ]}
+                      >
+                        <RadioButton
+                          selected={paymentMethod?.bankName === item?.bankName}
+                          style={{ marginRight: 5 }}
+                        />
+                      </View>
+                    </TouchableOpacity>
+                  ))
+                : ""}
             </View>
-            {userBank?.length > 0 ? (
-                userBank.map((item) => (<TouchableOpacity
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    borderTopWidth: 1,
-                    borderTopColor: "#E4E4E4",
-                    padding: 10,
-                  }}
-                  onPress={() => setPaymentMethod(item)}
-                >
-                  <View style={{ flexDirection: "row", alignItems: "center" }}>
-                    <AppText color={BLACK}>{item?.bankName}</AppText>
-                    <FastImage
-                      source={successfullIcon}
-                      resizeMode="contain"
-                      style={{ width: 12, height: 12, marginLeft: 5 }}
-                    />
-                  </View>
-                  <View
-                    style={[
-                      paymentMethod?.bankName === item?.bankName &&
-                        styles.selectedMethod,
-                    ]}
-                  >
-                    <RadioButton
-                      selected={paymentMethod?.bankName === item?.bankName}
-                      style={{ marginRight: 5 }}
-                    />
-                  </View>
-                </TouchableOpacity>))
-                
-              ) : (
-                ""
-              )}
-            </View>
-           
           </View>
         </ScrollView>
         <View
@@ -716,12 +765,21 @@ const Withdrawal = () => {
 
           <PrimaryButton
             title={amount > 0 ? "Withdraw ₹ " + amount : "Withdraw "}
-            disabled={amount < 100 || amount > 100000 || isNaN(amount) || amount > userWallet?.winningAmount}
+            disabled={
+              amount < 100 ||
+              amount > 100000 ||
+              isNaN(amount) ||
+              amount > userWallet?.winningAmount
+            }
             // disabled={true}
             buttonStyle={{
               backgroundColor:
-                (amount < 100 || amount > 100000 || isNaN(amount) || amount > userWallet?.winningAmount) ? colors.disableText
-               : "#01B9F5",
+                amount < 100 ||
+                amount > 100000 ||
+                isNaN(amount) ||
+                amount > userWallet?.winningAmount
+                  ? colors.disableText
+                  : "#01B9F5",
               width: "100%",
             }}
             onPress={handleUserWithdrawal}
@@ -880,7 +938,7 @@ const Withdrawal = () => {
               </AppText>
               <AppText type={TWELVE} color={BLACK}>
                 {/* {'UPI'} */}
-                {withdrawResponse?.payoutDetails?.reference_id}
+                {withdrawResponse?.payoutDetails?.reference_id || withdrawResponse?._id}
               </AppText>
               {/* <FastImage
                 source={method}

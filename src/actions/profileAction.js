@@ -41,6 +41,8 @@ import {
   setWithdrawalFee,
   setTdsPaid,
   setBonusTransactions,
+  setLeaderBoardTransactions,
+  setBanStates,
 } from "../slices/profileSlice";
 import {
   AUTHSTACK,
@@ -57,19 +59,19 @@ export const getUserProfile =
   (isNavigate, isUpdate = false) =>
   async (dispatch) => {
     try {
-      dispatch(setLoading(true));
-      const response = await appOperation.customer.get_profile();
-      if (response?.success) {
+      // dispatch(setLoading(true));
+      // const response = await appOperation.customer.get_profile();
+      // if (response?.success) {
         //   isNavigate ? NavigationService.reset(BOTTOM_NAVIGATION_STACK) : null;
         //   isUpdate ? NavigationService.navigate(BOTTOM_TAB_PROFILE_SCREEN) : null;
         // NavigationService.reset(BOTTOM_NAVIGATION_STACK);
         isNavigate ? null : NavigationService.reset(BOTTOM_NAVIGATION_STACK);
-        dispatch(setUserData(response?.data));
+        // dispatch(setUserData(response?.data));
         // dispatch(updateDeviceToken());
-      } else {
-        NavigationService.reset(AUTHSTACK);
-        // toastAlert.showToastError(response?.message);
-      }
+      // } else {
+      //   NavigationService.reset(AUTHSTACK);
+      //   // toastAlert.showToastError(response?.message);
+      // }
     } catch (e) {
       logError(e);
       NavigationService.reset(AUTHSTACK);
@@ -126,17 +128,36 @@ export const getKycDetails = () => async (dispatch) => {
   }
 };
 
-export const getTransactions = () => async (dispatch) => {
+export const getBanStates = () => async (dispatch) => {
+  try {
+    dispatch(setLoading(true));
+    const res = await appOperation.customer.get_ban_state();
+    if (res?.success) {
+      dispatch(setLoading(false));
+      dispatch(setBanStates(res?.data));
+    }
+  } catch (e) {
+    dispatch(setLoading(false));
+    console.log("error in getBanStates", e);
+  } finally {
+    dispatch(setLoading(false));
+  }
+};
+
+export const getTransactions = (setFilterDepositData = () => {}, setFilterWithdrawData = () => {}) => async (dispatch) => {
   try {
     dispatch(setLoading(true));
     const res = await appOperation.customer.get_transactions();
-    console.log(res?.data?.withdrawalTransactions, "getTransactions");
+    // console.log(res?.data, "getTransactions");
     if (res?.success) {
       dispatch(setLoading(false));
       dispatch(setDepositTransactions(res?.data?.depositTransactions));
+      setFilterDepositData(res?.data?.depositTransactions);
       dispatch(setLobbyTransactions(res?.data?.pokerGameTransactions));
       dispatch(setWithdrawTransactions(res?.data?.withdrawalTransactions));
+      setFilterWithdrawData(res?.data?.withdrawalTransactions);
       dispatch(setBonusTransactions(res?.data?.bonusTransactions));
+      dispatch(setLeaderBoardTransactions(res?.data?.leaderBoardTransactions));
     }
   } catch (e) {
     dispatch(setLoading(false));
@@ -495,12 +516,54 @@ export const editProfile = (data, id) => async (dispatch) => {
   }
 };
 
+export const revertTransaction = (data) => async (dispatch) => {
+  try {
+    dispatch(setLoading(true));
+    const res = await appOperation.customer.revert_transaction(data);
+    console.log(res, "res");
+    if (res?.code == 200) {
+      toastAlert.showToastError(res?.message);
+      dispatch(getTransactions());
+    }
+    dispatch(setLoading(false));
+  } catch (e) {
+    console.log(e);
+    toastAlert.showToastError(e?.message);
+  } finally {
+    dispatch(setLoading(false));
+  }
+};
+
 export const userWithdrawal =
   (data, onShowWithdrawStatus = () => {}) =>
   async (dispatch) => {
     try {
       dispatch(setLoading(true));
       const res = await appOperation.customer.user_withdrawal(data);
+      console.log(res, "userWithdrawal");
+      if (res?.success) {
+        // toastAlert.showToastError(res?.message);
+        dispatch(getUserWallet());
+        dispatch(setWithdrawResponse(res?.data));
+        dispatch(getPaymentType());
+        dispatch(getTransactions());
+        onShowWithdrawStatus();
+      }
+      dispatch(setLoading(false));
+    } catch (e) {
+      console.log(e);
+      toastAlert.showToastError(e?.message);
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
+
+  export const userStandardWithdrawal =
+  (data, onShowWithdrawStatus = () => {}) =>
+  async (dispatch) => {
+    try {
+      dispatch(setLoading(true));
+      const res = await appOperation.customer.user_standard_withdrawal(data);
       console.log(res, "userWithdrawal");
       if (res?.success) {
         // toastAlert.showToastError(res?.message);
@@ -620,6 +683,20 @@ export const getUserWallet = () => async (dispatch) => {
   }
 };
 
+export const getUserWalletURL = () => async (dispatch) => {
+  try {
+    // dispatch(setLoading(true));
+    const res = await appOperation.customer.get_user_wallet();
+    if (res?.success) {
+      dispatch(setUserWallet(res?.data));
+    }
+  } catch (e) {
+    console.log("error in getUserWalletURL", e);
+  } finally {
+    // dispatch(setLoading(false));
+  }
+};
+
 export const getRemainingCashLimit = () => async (dispatch) => {
   try {
     dispatch(setLoading(true));
@@ -661,7 +738,7 @@ export const getPaymentType = (data) => async (dispatch) => {
       dispatch(
         setRemainingInstantWithdraw(res?.data?.remainingInstantWithdrawals)
       );
-      dispatch(setTdsPaid(res?.data?.tds));
+      dispatch(setTdsPaid(res?.data?.tdsPaid));
       dispatch(setWithdrawalFee(res?.data?.withdrawalFee));
     }
   } catch (e) {
@@ -737,9 +814,9 @@ export const getPaymentInit =
               upi_expiry_minutes: 10,
               authorize_only: false,
               authorization: {
-                approve_by: "2025-01-31T10:20:12+05:30",
-                start_time: "2025-01-31T10:20:12+05:30",
-                end_time: "2025-01-31T10:20:12+05:30",
+                approve_by: "2025-02-28T10:20:12+05:30",
+                start_time: "2025-02-28T10:20:12+05:30",
+                end_time: "2025-02-28T10:20:12+05:30",
               },
             },
           },
@@ -809,30 +886,90 @@ export const getPaymentLink =
     }
   };
 
-export const getPaymentState = (id, handlePaymetStatus) => async (dispatch) => {
-  try {
-    dispatch(setLoading(true));
-    const res = await appOperation.customer.get_payment_status(id);
-    // console.log(res, "getPaymentState");
-    if (res?.code == 200) {
-      dispatch(setPaymentStatus(res));
-      handlePaymetStatus();
-      // toastAlert.showToastError(res?.message);
-      dispatch(getUserWallet());
-    } else {
-      dispatch(setPaymentStatus(res));
-      handlePaymetStatus();
-      toastAlert.showToastError(res?.message);
-      dispatch(getUserWallet());
+  export const getPaymentState = (id, handlePaymentStatus) => async (dispatch) => {
+    try {
+      dispatch(setLoading(true));
+      let attempts = 0;
+      const maxRetries = 2; // Maximum retries
+      const interval = 5000; // Poll every 5 seconds
+  
+      const pollStatus = async () => {
+        try {
+          const res = await appOperation.customer.get_payment_status(id);
+          console.log(res, "getPaymentState");
+          if (res?.code == 200) {
+            dispatch(setPaymentStatus(res));
+            
+            // Check if payment reached a terminal state
+            if (["Confirmed", "Cancelled"].includes(res?.transaction?.status)) {
+              handlePaymentStatus();
+              dispatch(setPaymentStatus(res));
+             
+              dispatch(getUserWallet());
+              dispatch(setLoading(false));
+              return; // Stop polling
+            }
+          } 
+          attempts++;
+          if (attempts >= maxRetries) {
+            handlePaymentStatus();
+            dispatch(setPaymentStatus(res));
+            dispatch(setLoading(false));
+            return;
+          }
+          // Continue polling after interval
+          setTimeout(pollStatus, interval);
+        } catch (e) {
+          console.error("Error fetching payment status:", e);
+          toastAlert.showToastError(e?.message);
+          dispatch(setLoading(false));
+        }
+      };
+  
+      // Start polling
+      pollStatus();
+    } catch (e) {
+      console.log(e);
+      toastAlert.showToastError(e?.message);
+      dispatch(setLoading(false));
     }
-    dispatch(setLoading(false));
-  } catch (e) {
-    console.log(e);
-    toastAlert.showToastError(e?.message);
-  } finally {
-    dispatch(setLoading(false));
-  }
-};
+  };
+  
+
+// export const getPaymentState = (id, handlePaymetStatus) => async (dispatch) => {
+//   try {
+//     dispatch(setLoading(true));
+//     // console.log('running');
+//     const res = await appOperation.customer.get_payment_status(id);
+//     // console.log(res?.transaction?.status, "getPaymentState");
+//     if (res?.code == 200) {
+//       dispatch(setPaymentStatus(res));
+//       // if(res?.transaction?.status === "Pending"){
+//       //   console.log("condtion");
+//       //   setTimeout((ele=>{
+//       //     console.log("1st timeeeee")
+//       //     dispatch(getPaymentState(id, handlePaymetStatus));
+//       //   }),5000);
+//       //   // return;
+//       // }
+//       // console.log("out");
+//       handlePaymetStatus();
+//       // toastAlert.showToastError(res?.message);
+//       dispatch(getUserWallet());
+//     } else {
+//       dispatch(setPaymentStatus(res));
+//       handlePaymetStatus();
+//       toastAlert.showToastError(res?.message);
+//       dispatch(getUserWallet());
+//     }
+//     dispatch(setLoading(false));
+//   } catch (e) {
+//     console.log(e);
+//     toastAlert.showToastError(e?.message);
+//   } finally {
+//     dispatch(setLoading(false));
+//   }
+// };
 
 export const getPaymentSandboxState =
   (id, handlePaymetStatus) => async (dispatch) => {
